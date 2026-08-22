@@ -1,0 +1,57 @@
+services:
+  app:
+    image: ${DOCKER_IMAGE:-amromohmmad/a_fit_backend:latest}
+    container_name: a_fit_backend_app
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./:/var/www  
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - afit_network
+
+  nginx:
+    image: nginx:alpine
+    container_name: a_fit_nginx
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./:/var/www:ro
+    depends_on:
+      - app
+    networks:
+      - afit_network
+
+  db:
+    image: mysql:8.0
+    container_name: a_fit_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "${DB_FORWARD_PORT:-3306}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - afit_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+networks:
+  afit_network:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local
