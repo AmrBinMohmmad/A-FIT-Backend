@@ -11,5 +11,6 @@ Route::prefix('/auth')->group(function(){
 Route::prefix('/auth')->middleware('auth:sanctum')->group(function(){
     Route::post('/verifyCode',[AuthController::class,'verfiyEmail']);
     Route::post('/resendCode',[AuthController::class,'resendCode']);
+    Route::post('/logout',[AuthController::class,'logout']);
 });
 
