@@ -1,0 +1,56 @@
+<?php
+
+return [
+    'accepted' => 'يجب قبول :attribute.',
+    'accepted_if' => 'يجب قبول :attribute عندما يكون :other هو :value.',
+    'active_url' => ':attribute ليس عنوان URL صالحاً.',
+    'after' => 'يجب أن يكون :attribute تاريخاً بعد :date.',
+    'alpha' => 'يجب أن يحتوي :attribute على أحرف فقط.',
+    'alpha_dash' => 'يجب أن يحتوي :attribute على أحرف وأرقام وشرطات فقط.',
+    'alpha_num' => 'يجب أن يحتوي :attribute على أحرف وأرقام فقط.',
+    'array' => 'يجب أن يكون :attribute مصفوفة.',
+    'before' => 'يجب أن يكون :attribute تاريخاً قبل :date.',
+    'between' => [
+        'numeric' => 'يجب أن يكون :attribute بين :min و :max.',
+        'file' => 'يجب أن يكون :attribute بين :min و :max كيلوبايت.',
+        'string' => 'يجب أن يكون :attribute بين :min و :max حرفاً.',
+        'array' => 'يجب أن يحتوي :attribute على ما بين :min و :max عنصراً.',
+    ],
+    'boolean' => 'يجب أن يكون حقل :attribute صواباً أو خطأ.',
+    'confirmed' => 'تأكيد :attribute غير متطابق.',
+    'date' => ':attribute ليس تاريخاً صالحاً.',
+    'email' => 'يجب أن يكون :attribute بريداً إلكترونياً صالحاً.',
+    'exists' => ':attribute المحدد غير موجود.',
+    'max' => [
+        'numeric' => 'يجب ألا يكون :attribute أكبر من :max.',
+        'file' => 'يجب ألا يتجاوز حجم :attribute :max كيلوبايت.',
+        'string' => 'يجب ألا يتجاوز :attribute :max حرفاً.',
+        'array' => 'يجب ألا يحتوي :attribute على أكثر من :max عنصراً.',
+    ],
+    'min' => [
+        'numeric' => 'يجب أن يكون :attribute على الأقل :min.',
+        'file' => 'يجب أن يكون حجم :attribute على الأقل :min كيلوبايت.',
+        'string' => 'يجب أن يتكون :attribute من :min أحرف على الأقل.',
+        'array' => 'يجب أن يحتوي :attribute على :min عناصر على الأقل.',
+    ],
+    'numeric' => 'يجب أن يكون :attribute رقماً.',
+    'required' => 'حقل :attribute مطلوب.',
+    'size' => [
+        'numeric' => 'يجب أن يكون :attribute بحجم :size.',
+        'file' => 'يجب أن يكون حجم :attribute :size كيلوبايت.',
+        'string' => 'يجب أن يتكون :attribute من :size أحرف.',
+        'array' => 'يجب أن يحتوي :attribute على :size عنصراً.',
+    ],
+    'string' => 'يجب أن يكون :attribute نصاً.',
+    'unique' => 'قيمة :attribute مستخدمة بالفعل.',
+
+    'attributes' => [
+        'name' => 'الاسم',
+        'email' => 'البريد الإلكتروني',
+        'code' => 'رمز التحقق',
+        'calories' => 'السعرات',
+        'protein' => 'البروتين',
+        'carbs' => 'الكارب',
+        'fat' => 'الدهون',
+    ],
+];
