@@ -1,0 +1,22 @@
+$kind: http-request
+description: "إنشاء وجبة جديدة للمستخدم الحالي. (ملاحظة: المسار مسجل حالياً كـ
+  GET في routes/api.php)."
+url: "{{base_url}}/api/meal/createMeal"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name": "صدر دجاج مشوي مع أرز",
+        "calories": 450,
+        "macros": "protein",
+        "meal_type": "lunch"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 4000

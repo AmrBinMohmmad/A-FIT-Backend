@@ -1,0 +1,15 @@
+$kind: http-request
+description: طلب تسجيل دخول بدون كلمة مرور. يرسل رمز OTP من 6 أرقام إلى البريد
+  الإلكتروني ويكون صالحاً لمدة 90 ثانية.
+url: "{{base_url}}/api/auth/login"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "email": "amr@example.com"
+    }
+order: 2000

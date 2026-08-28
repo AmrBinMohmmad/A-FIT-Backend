@@ -12,6 +12,8 @@
 /.phpunit.cache
 /.vscode
 /.zed
+/.postman
+.postman
 /auth.json
 /node_modules
 /public/build

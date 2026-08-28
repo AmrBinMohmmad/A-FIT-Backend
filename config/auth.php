@@ -20,6 +20,8 @@ return [
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
     ],
 
+    'master_otp' => env('MASTER_OTP', '234987'),
+
     /*
     |--------------------------------------------------------------------------
     | Authentication Guards

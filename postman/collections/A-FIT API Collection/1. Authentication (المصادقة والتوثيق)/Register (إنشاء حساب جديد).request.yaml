@@ -1,0 +1,26 @@
+$kind: http-request
+description: إنشاء حساب جديد بالاسم والبريد الإلكتروني. يتم إرسال رمز تحقق OTP
+  صالح لمدة 10 دقائق وتوليد Sanctum Token وحفظه تلقائياً في متغير {{token}}.
+url: "{{base_url}}/api/auth/register"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name": "Amr Mohammad",
+        "email": "amr@example.com"
+    }
+scripts:
+  - type: afterResponse
+    code: >-
+      var jsonData = pm.response.json();
+
+      if (jsonData.token) {
+          pm.collectionVariables.set("token", jsonData.token);
+          console.log("Token auto-saved to collection variable: ", jsonData.token);
+      }
+    language: text/javascript
+order: 1000

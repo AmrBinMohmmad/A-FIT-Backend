@@ -1,0 +1,11 @@
+$kind: http-request
+description: إعادة إرسال رمز تحقق جديد إلى بريد المستخدم المسجل (يتطلب Bearer Token).
+url: "{{base_url}}/api/auth/resendCode"
+method: POST
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 5000

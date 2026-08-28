@@ -1,0 +1,25 @@
+$kind: http-request
+description: التحقق من رمز الدخول (OTP) وتوليد التوكن Sanctum API Token وحفظه
+  تلقائياً في متغير {{token}}.
+url: "{{base_url}}/api/auth/verifyLogin"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "email": "amr@example.com",
+        "code": "234987"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      var jsonData = pm.response.json();
+      if (jsonData.token) {
+          pm.collectionVariables.set("token", jsonData.token);
+          console.log("Token updated in collection variable: ", jsonData.token);
+      }
+    language: text/javascript
+order: 3000

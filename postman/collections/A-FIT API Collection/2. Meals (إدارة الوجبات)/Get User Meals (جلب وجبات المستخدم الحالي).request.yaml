@@ -1,0 +1,11 @@
+$kind: http-request
+description: جلب الوجبات الخاصة بالمستخدم المسجل حالياً (يتطلب Bearer Token).
+url: "{{base_url}}/api/meal/getUserMeals"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 2000
