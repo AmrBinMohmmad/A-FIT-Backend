@@ -1,0 +1,19 @@
+$kind: http-request
+description: تأكيد وتفعيل البريد الإلكتروني باستخدام الرمز المكون من 6 أرقام
+  (يتطلب Bearer Token).
+url: "{{base_url}}/api/auth/verifyCode"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "code": "234987"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 4000

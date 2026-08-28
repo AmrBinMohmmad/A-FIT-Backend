@@ -1,0 +1,3 @@
+$kind: collection
+description: مجموعة مسارات التوثيق والمصادقة بدون كلمة مرور (OTP Auth Flow).
+order: 1000

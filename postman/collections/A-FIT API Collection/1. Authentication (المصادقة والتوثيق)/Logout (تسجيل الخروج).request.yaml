@@ -1,0 +1,11 @@
+$kind: http-request
+description: تسجيل الخروج وحذف التوكن الحالي من الخادم (يتطلب Bearer Token).
+url: "{{base_url}}/api/auth/logout"
+method: POST
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 6000

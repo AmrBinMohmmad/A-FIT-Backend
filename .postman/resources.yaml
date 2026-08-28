@@ -1,0 +1,12 @@
+# Use this workspace to collaborate
+workspace:
+  id: 4e8edcef-257c-4108-8ccd-ef2641b12a49
+
+localResources:
+  collections:
+    - ..\A-FIT_API_Collection.postman_collection.json
+
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+cloudResources:
+  collections:
+    ..\postman\collections\A-FIT API Collection: 52b7204c-51c5-400e-96fa-f4e125abcfd5

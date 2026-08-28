@@ -1,0 +1,564 @@
+{
+	"info": {
+		"_postman_id": "a-fit-api-collection-v7",
+		"name": "A-FIT API Collection",
+		"description": "Complete Postman API Collection for A-FIT (Backend).\nFeatures Passwordless OTP First Authentication (Register & Login) + Full Meal CRUD with automatic Bearer token storage.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "1. Register - Request OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Amr Mohammad\",\n    \"email\": \"amr@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Validates name/email, checks that email is NOT already in database, and sends a 6-digit registration OTP to the user's email. Does NOT insert into DB yet."
+					},
+					"response": []
+				},
+				{
+					"name": "1.1 Register - Duplicate Email Check (422 Error)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Amr Mohammad\",\n    \"email\": \"amr@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Tests sending an email that already exists in MySQL database. Returns 422 with message: 'البريد الإلكتروني مسجل مسبقاً'."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Verify Register OTP (Creates User & Returns Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"token\", jsonData.token);",
+									"    console.log(\"Token auto-saved to {{token}}: \", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"amr@example.com\",\n    \"code\": \"234987\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/verifyRegister",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"verifyRegister"
+							]
+						},
+						"description": "Verifies registration OTP (or Master OTP 234987), creates the user in MySQL database, and returns the Bearer Token."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Resend Register Code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"amr@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/resendRegisterCode",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"resendRegisterCode"
+							]
+						},
+						"description": "Resends a new registration OTP code for a pending email."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Login - Request OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"amr@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Sends a passwordless login OTP (valid for 90 seconds) to an existing user."
+					},
+					"response": []
+				},
+				{
+					"name": "5. Verify Login OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"token\", jsonData.token);",
+									"    console.log(\"Token auto-saved to {{token}}: \", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"amr@example.com\",\n    \"code\": \"234987\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/verifyLogin",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"verifyLogin"
+							]
+						},
+						"description": "Verifies login OTP (or Master OTP 234987) and returns Bearer Token."
+					},
+					"response": []
+				},
+				{
+					"name": "6. Logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Revokes current user session/token."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Meals CRUD",
+			"item": [
+				{
+					"name": "Create Meal (POST)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"صدر دجاج مشوي مع أرز\",\n    \"calories\": 520,\n    \"protein\": 45,\n    \"carbs\": 55,\n    \"fat\": 12,\n    \"meal_type\": \"lunch\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/meal/createMeal",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"meal",
+								"createMeal"
+							]
+						},
+						"description": "Create a new meal with separate macros for authenticated user."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Meals (GET)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/meal/getUserMeals",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"meal",
+								"getUserMeals"
+							]
+						},
+						"description": "Get all meals belonging to the authenticated user."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Meal (GET)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/meal/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"meal",
+								"1"
+							]
+						},
+						"description": "Get a specific meal by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Meal (PUT)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"صدر دجاج مشوي مع أرز وخضار\",\n    \"calories\": 550,\n    \"protein\": 50,\n    \"carbs\": 60,\n    \"fat\": 14,\n    \"meal_type\": \"lunch\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/meal/updateMeal/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"meal",
+								"updateMeal",
+								"1"
+							]
+						},
+						"description": "Update an existing meal by ID (only owner can update)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Meal (DELETE)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/meal/deleteMeal/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"meal",
+								"deleteMeal",
+								"1"
+							]
+						},
+						"description": "Delete a meal by ID (only owner can delete)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Meals (GET - Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/meal/getAllMeals",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"meal",
+								"getAllMeals"
+							]
+						},
+						"description": "Get all meals recorded across the system."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
