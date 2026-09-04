@@ -13,11 +13,19 @@ use App\Exceptions\MealException;
 class MealController extends Controller
 {
     use ApiResponse;
-    public function getUserMeals(){
-        $userMeals = Meal::where('user_id', Auth::id())->latest()->get();
-        if (!$userMeals){
-           return $this->errorResponse('تعذر جلب وجباتك');
-        }
+    public function getUserMeals(Request $request){
+        $request->validate([
+            'date'=> ['nullable','date_format:Y-m-d'],
+        ]);
+
+        $query = Meal::where('user_id',Auth::id());
+
+        if($request->filled('date')){
+            $query->whereDate('created_at',$request->date);
+        };
+
+        $userMeals = $query->latest()->get();
+
         return $this->successResponse($userMeals,'تم جلب وجباتك بنجاح');
     }
 
