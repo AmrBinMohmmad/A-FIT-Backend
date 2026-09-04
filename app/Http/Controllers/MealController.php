@@ -49,26 +49,21 @@ class MealController extends Controller
     public function createMeal(Request $request){
         $validated = $request->validate([
             'name' => ['required', 'string', 'min:2'],
-            'calories' => ['required', 'numeric', 'min:0'],
-            'protein' => ['nullable', 'numeric', 'min:0'],
-            'carbs' => ['nullable', 'numeric', 'min:0'],
-            'fat' => ['nullable', 'numeric', 'min:0'],
+            'calories' => ['required', 'integer', 'min:0'],
+            'protein' => ['nullable', 'integer', 'min:0'],
+            'carbs' => ['nullable', 'integer', 'min:0'],
+            'fat' => ['nullable', 'integer', 'min:0'],
             'meal_type' => ['nullable', 'string', 'in:breakfast,lunch,dinner,snack,other'],
         ], [
             'name.required' => 'حقل اسم الوجبة مطلوب',
             'name.min' => 'اسم الوجبة يجب أن يتكون من حرفين على الأقل',
             'calories.required' => 'حقل السعرات الحرارية مطلوب',
-            'calories.numeric' => 'السعرات يجب أن تكون قيمة رقمية',
-            'protein.numeric' => 'البروتين يجب أن يكون قيمة رقمية',
-            'carbs.numeric' => 'الكاربوهيدرات يجب أن تكون قيمة رقمية',
-            'fat.numeric' => 'الدهون يجب أن تكون قيمة رقمية',
+            'calories.integer' => 'السعرات يجب أن تكون عدداً صحيحاً',
+            'protein.integer' => 'البروتين يجب أن يكون عدداً صحيحاً',
+            'carbs.integer' => 'الكاربوهيدرات يجب أن تكون عدداً صحيحاً',
+            'fat.integer' => 'الدهون يجب أن تكون عدداً صحيحاً',
             'meal_type.in' => 'نوع الوجبة غير صالح',
         ]);
-
-        $validated['calories'] = (int) round($validated['calories']);
-        if (isset($validated['protein'])) $validated['protein'] = (int) round($validated['protein']);
-        if (isset($validated['carbs'])) $validated['carbs'] = (int) round($validated['carbs']);
-        if (isset($validated['fat'])) $validated['fat'] = (int) round($validated['fat']);
 
         $validated['user_id'] = Auth::id();
         $meal = Meal::create($validated);
@@ -90,26 +85,21 @@ class MealController extends Controller
         $validated = $request->validate(
             [
             'name' => ['sometimes','nullable', 'string', 'min:2'],
-            'calories' => ['sometimes','nullable', 'numeric', 'min:0'],
-            'protein' => ['sometimes','nullable', 'numeric', 'min:0'],
-            'carbs' => ['sometimes','nullable', 'numeric', 'min:0'],
-            'fat' => ['sometimes','nullable', 'numeric', 'min:0'],
+            'calories' => ['sometimes','nullable', 'integer', 'min:0'],
+            'protein' => ['sometimes','nullable', 'integer', 'min:0'],
+            'carbs' => ['sometimes','nullable', 'integer', 'min:0'],
+            'fat' => ['sometimes','nullable', 'integer', 'min:0'],
             'meal_type' => ['sometimes','nullable', 'string', 'in:breakfast,lunch,dinner,snack,other'],
             ], [
             'name.required' => 'حقل اسم الوجبة مطلوب',
             'name.min' => 'اسم الوجبة يجب أن يتكون من حرفين على الأقل',
-            'calories.numeric' => 'السعرات يجب أن تكون قيمة رقمية',
-            'protein.numeric' => 'البروتين يجب أن يكون قيمة رقمية',
-            'carbs.numeric' => 'الكاربوهيدرات يجب أن تكون قيمة رقمية',
-            'fat.numeric' => 'الدهون يجب أن تكون قيمة رقمية',
+            'calories.integer' => 'السعرات يجب أن تكون عدداً صحيحاً',
+            'protein.integer' => 'البروتين يجب أن يكون عدداً صحيحاً',
+            'carbs.integer' => 'الكاربوهيدرات يجب أن تكون عدداً صحيحاً',
+            'fat.integer' => 'الدهون يجب أن تكون عدداً صحيحاً',
             'meal_type.in' => 'نوع الوجبة غير صالح',
         ]
             );
-
-        if (isset($validated['calories'])) $validated['calories'] = (int) round($validated['calories']);
-        if (isset($validated['protein'])) $validated['protein'] = (int) round($validated['protein']);
-        if (isset($validated['carbs'])) $validated['carbs'] = (int) round($validated['carbs']);
-        if (isset($validated['fat'])) $validated['fat'] = (int) round($validated['fat']);
 
         $meal->update($validated);
 
