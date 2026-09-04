@@ -4,7 +4,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MealController;
 use Illuminate\Support\Facades\Route;
 
-// Public Authentication Routes
 Route::prefix('/auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/verifyRegister', [AuthController::class, 'verifyRegister']);
@@ -13,7 +12,6 @@ Route::prefix('/auth')->group(function () {
     Route::post('/verifyLogin', [AuthController::class, 'verifyLogin']);
 });
 
-// Authenticated Routes (Protected by Laravel Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 

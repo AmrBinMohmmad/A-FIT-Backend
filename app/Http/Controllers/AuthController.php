@@ -130,6 +130,10 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        $request->merge([
+            'email' => strtolower(trim((string) $request->input('email'))),
+        ]);
+
         $validated = $request->validate([
             'email' => ['required', 'string', 'email', 'max:255', 'exists:users,email'],
         ], [
@@ -141,7 +145,8 @@ class AuthController extends Controller
         $user = User::where('email', $validated['email'])->first();
         $code = (string) random_int(100000, 999999);
 
-        Cache::put("login_verify_{$user->id}", $code, now()->addSeconds(90));
+        // Keep OTP active for 10 minutes (prevents premature 90-second expiration)
+        Cache::put("login_verify_{$user->id}", $code, now()->addMinutes(10));
 
         Mail::to($user->email)->send(new VerifyLogin($code, $user->name));
 
@@ -153,6 +158,10 @@ class AuthController extends Controller
 
     public function verifyLogin(Request $request)
     {
+        $request->merge([
+            'email' => strtolower(trim((string) $request->input('email'))),
+        ]);
+
         $validated = $request->validate([
             'email' => ['required', 'string', 'email', 'max:255', 'exists:users,email'],
             'code'  => ['required', 'string', 'size:6'],
@@ -170,18 +179,23 @@ class AuthController extends Controller
 
         if (!$isMasterOtp && (!$cachedCode || $cachedCode !== $validated['code'])) {
             return response()->json([
-                'message' => 'رمز الدخول غير صحيح، حاول مرة أخرى',
+                'message' => 'رمز الدخول غير صحيح أو منتهي الصلاحية، حاول مرة أخرى',
             ], 400);
         }
 
         Cache::forget("login_verify_{$user->id}");
+
+        // Automatically ensure email_verified_at is set since user verified via email OTP
+        if (is_null($user->email_verified_at)) {
+            $user->forceFill(['email_verified_at' => now()])->save();
+        }
 
         $user->tokens()->delete();
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
             'message' => 'تم تسجيل الدخول بنجاح',
-            'user'    => $user,
+            'user'    => $user->fresh(),
             'token'   => $token,
         ], 200);
     }
