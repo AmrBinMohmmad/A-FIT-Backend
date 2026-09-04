@@ -11,4 +11,4 @@ auth:
     - key: token
       value: "{{token}}"
   type: bearer
-order: 1185
+order: 1000

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('/auth')->group(function () {
     
     Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/verifyCode', [AuthController::class, 'verifyRegister']); // Alias
+    Route::post('/verifyRegister', [AuthController::class, 'verifyRegister']);
     Route::post('/resendRegisterCode', [AuthController::class, 'resendRegisterCode']);
 
     
@@ -32,10 +32,9 @@ Route::prefix('/meal')->middleware('auth:sanctum')->group(function () {
     Route::post('/createMeal', [MealController::class, 'createMeal']);
 
     
-    Route::put('/updateMeal/{id}', [MealController::class, 'updateMeal']);
-    Route::put('/{id}', [MealController::class, 'updateMeal']);
+    Route::put('/editMeal/{id}', [MealController::class, 'editMeal']);
+    Route::put('/updateMeal/{id}', [MealController::class, 'editMeal']);
 
-    
+    Route::delete('/destroyMeal/{id}', [MealController::class, 'deleteMeal']);
     Route::delete('/deleteMeal/{id}', [MealController::class, 'deleteMeal']);
-    Route::delete('/{id}', [MealController::class, 'deleteMeal']);
 });

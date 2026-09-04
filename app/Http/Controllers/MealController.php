@@ -63,9 +63,50 @@ class MealController extends Controller
             return $this->errorResponse();
         }
 
-        return response()->json([
-            'message' => 'تم إنشاء الوجبة بنجاح',
-            'meal' => $meal,
-        ], 201);
+        return $this->successResponse($meal,'تم إنشاء الوجبة بنجاح');
+    }
+    public function editMeal(Request $request, int $id){
+
+        $meal = Meal::where('id',$id)->where('user_id',Auth::id())->first();
+
+        if(!$meal){
+            return $this-> errorResponse('الوجبة غير موجودة او غير مصرح لك بتعديلها');
+          };
+
+        $validated = $request->validate(
+            [
+            'name' => ['sometimes','nullable', 'string', 'min:4'],
+            'calories' => ['sometimes','nullable', 'integer', 'min:0'],
+            'protein' => ['sometimes','nullable', 'integer', 'min:0'],
+            'carbs' => ['sometimes','nullable', 'integer', 'min:0'],
+            'fat' => ['sometimes','nullable', 'integer', 'min:0'],
+            'meal_type' => ['sometimes','nullable', 'string', 'in:breakfast,lunch,dinner,snack,other'],
+            ], [
+            'name.required' => 'حقل اسم الوجبة مطلوب',
+            'name.min' => 'اسم الوجبة يجب أن يتكون من 4 أحرف على الأقل',
+            'calories.integer' => 'السعرات يجب أن تكون رقماً صحيحاً',
+            'protein.integer' => 'البروتين يجب أن يكون رقماً صحيحاً',
+            'carbs.integer' => 'الكاربوهيدرات يجب أن تكون رقماً صحيحاً',
+            'fat.integer' => 'الدهون يجب أن تكون رقماً صحيحاً',
+            'meal_type.in' => 'نوع الوجبة غير صالح',
+        ]
+            );
+        $meal->update($validated);
+
+        return $this->successResponse($meal->fresh(),'تم تحديث الوجبة بنجاح');
+    }
+    public function deleteMeal(int $id){
+        $meal = Meal::where('id',$id)->where('user_id',Auth::id())->first();
+        if(!$meal){
+            return $this-> errorResponse('الوجبة غير موجودة او غير مصرح لك بحذفها');
+        };
+
+        $meal->delete();
+
+        return $this->successResponse(null,'تم حذف الوجبة بنجاح');
+    }
+
+    public function destroyMeal(int $id){
+        return $this->deleteMeal($id);
     }
 }
