@@ -118,10 +118,6 @@ class MealController extends Controller
         return $this->successResponse(null,'تم حذف الوجبة بنجاح');
     }
 
-    public function destroyMeal(int $id){
-        return $this->deleteMeal($id);
-    }
-
     public function clearUserMeals(){
         Meal::where('user_id', Auth::id())->delete();
         return $this->successResponse(null, 'تم مسح جميع وجباتك بنجاح');
