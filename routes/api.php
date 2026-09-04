@@ -35,6 +35,7 @@ Route::prefix('/meal')->middleware('auth:sanctum')->group(function () {
     Route::put('/editMeal/{id}', [MealController::class, 'editMeal']);
     Route::put('/updateMeal/{id}', [MealController::class, 'editMeal']);
 
+    Route::delete('/clearUserMeals', [MealController::class, 'clearUserMeals']);
     Route::delete('/destroyMeal/{id}', [MealController::class, 'deleteMeal']);
     Route::delete('/deleteMeal/{id}', [MealController::class, 'deleteMeal']);
 });
