@@ -1,9 +1,8 @@
 $kind: collection
-description: >-
+name: A-FIT API Collection
+description: |-
   مجموعة طلبات Postman لجميع مسارات الـ API الخاصة بتطبيق A-FIT (أي-فت).
-
-  تتضمن مسارات التوثيق بدون كلمة مرور (OTP) وإدارة الوجبات، مع حفظ التوكن
-  تلقائياً في متغيرات المجموعة (Collection Variables).
+  تتضمن مسارات التوثيق بدون كلمة مرور (OTP) وإدارة الوجبات، مع حفظ التوكن تلقائياً في متغيرات المجموعة (Collection Variables).
 variables:
   base_url: http://127.0.0.1:8000
   token: ""
