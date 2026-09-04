@@ -40,7 +40,7 @@ class MealController extends Controller
 
     public function createMeal(Request $request){
         $validated = $request->validate([
-            'name' => ['required', 'string', 'min:4'],
+            'name' => ['required', 'string', 'min:2'],
             'calories' => ['nullable', 'integer', 'min:0'],
             'protein' => ['nullable', 'integer', 'min:0'],
             'carbs' => ['nullable', 'integer', 'min:0'],
@@ -48,7 +48,7 @@ class MealController extends Controller
             'meal_type' => ['nullable', 'string', 'in:breakfast,lunch,dinner,snack,other'],
         ], [
             'name.required' => 'حقل اسم الوجبة مطلوب',
-            'name.min' => 'اسم الوجبة يجب أن يتكون من 4 أحرف على الأقل',
+            'name.min' => 'اسم الوجبة يجب أن يتكون من حرفين على الأقل',
             'calories.integer' => 'السعرات يجب أن تكون رقماً صحيحاً',
             'protein.integer' => 'البروتين يجب أن يكون رقماً صحيحاً',
             'carbs.integer' => 'الكاربوهيدرات يجب أن تكون رقماً صحيحاً',
@@ -75,7 +75,7 @@ class MealController extends Controller
 
         $validated = $request->validate(
             [
-            'name' => ['sometimes','nullable', 'string', 'min:4'],
+            'name' => ['sometimes','nullable', 'string', 'min:2'],
             'calories' => ['sometimes','nullable', 'integer', 'min:0'],
             'protein' => ['sometimes','nullable', 'integer', 'min:0'],
             'carbs' => ['sometimes','nullable', 'integer', 'min:0'],
@@ -83,7 +83,7 @@ class MealController extends Controller
             'meal_type' => ['sometimes','nullable', 'string', 'in:breakfast,lunch,dinner,snack,other'],
             ], [
             'name.required' => 'حقل اسم الوجبة مطلوب',
-            'name.min' => 'اسم الوجبة يجب أن يتكون من 4 أحرف على الأقل',
+            'name.min' => 'اسم الوجبة يجب أن يتكون من حرفين على الأقل',
             'calories.integer' => 'السعرات يجب أن تكون رقماً صحيحاً',
             'protein.integer' => 'البروتين يجب أن يكون رقماً صحيحاً',
             'carbs.integer' => 'الكاربوهيدرات يجب أن تكون رقماً صحيحاً',
