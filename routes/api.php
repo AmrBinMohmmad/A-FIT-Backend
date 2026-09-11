@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MealController;
+use App\Http\Controllers\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('/auth')->group(function () {
@@ -23,5 +24,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/editMeal/{id}', [MealController::class, 'editMeal']);
         Route::delete('/clearUserMeals', [MealController::class, 'clearUserMeals']);
         Route::delete('/deleteMeal/{id}', [MealController::class, 'deleteMeal']);
+    });
+    Route::prefix('/user/profile')->group(function () {
+        Route::get('/', [UserProfileController::class, 'getProfile']);
+        Route::post('/', [UserProfileController::class, 'saveProfile']);
     });
 });
