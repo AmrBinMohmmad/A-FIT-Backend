@@ -14,6 +14,7 @@ class Meal extends Model
         'carbs',
         'fat',
         'meal_type',
+        'created_at',
     ];
 
     public function user()

@@ -54,6 +54,7 @@ class MealController extends Controller
             'carbs' => ['nullable', 'integer', 'min:0'],
             'fat' => ['nullable', 'integer', 'min:0'],
             'meal_type' => ['nullable', 'string', 'in:breakfast,lunch,dinner,snack,other'],
+            'created_at' => ['nullable', 'date'],
         ], [
             'name.required' => 'حقل اسم الوجبة مطلوب',
             'name.min' => 'اسم الوجبة يجب أن يتكون من حرفين على الأقل',
@@ -90,6 +91,7 @@ class MealController extends Controller
             'carbs' => ['sometimes','nullable', 'integer', 'min:0'],
             'fat' => ['sometimes','nullable', 'integer', 'min:0'],
             'meal_type' => ['sometimes','nullable', 'string', 'in:breakfast,lunch,dinner,snack,other'],
+            'created_at' => ['sometimes', 'nullable', 'date'],
             ], [
             'name.required' => 'حقل اسم الوجبة مطلوب',
             'name.min' => 'اسم الوجبة يجب أن يتكون من حرفين على الأقل',
@@ -116,8 +118,19 @@ class MealController extends Controller
         return $this->successResponse(null,'تم حذف الوجبة بنجاح');
     }
 
-    public function clearUserMeals(){
-        Meal::where('user_id', Auth::id())->delete();
+    public function clearUserMeals(Request $request){
+        $request->validate([
+            'date' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+
+        $query = Meal::where('user_id', Auth::id());
+
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->date)->delete();
+            return $this->successResponse(null, 'تم مسح وجبات هذا اليوم بنجاح');
+        }
+
+        $query->delete();
         return $this->successResponse(null, 'تم مسح جميع وجباتك بنجاح');
     }
 }
