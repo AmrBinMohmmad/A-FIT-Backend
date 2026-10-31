@@ -12,8 +12,6 @@ return [
     'account_created' => 'حسابك جاهز.',
     'signed_out' => 'تم تسجيل خروجك.',
     'signed_out_everywhere' => 'تم تسجيل خروجك من جميع الأجهزة.',
-    'photo_saved' => 'تم حفظ الصورة.',
-    'photo_removed' => 'تمت إزالة الصورة.',
     'account_deleted' => 'تم حذف حسابك وجميع بياناته.',
     'profile_saved' => 'تم حفظ خطتك.',
     'meal_created' => 'تم تسجيل الوجبة.',

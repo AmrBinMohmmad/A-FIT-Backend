@@ -74,8 +74,6 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('steps-sync', fn (Request $request) => Limit::perMinute(12)->by('steps:'.$request->user()?->getAuthIdentifier()));
 
-        RateLimiter::for('uploads', fn (Request $request) => Limit::perMinute(10)->by('upl:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
-
         RateLimiter::for('mutations', fn (Request $request) => Limit::perMinute(60)->by('mut:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
     }
 }

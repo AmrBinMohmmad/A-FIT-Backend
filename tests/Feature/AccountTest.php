@@ -68,10 +68,11 @@ final class AccountTest extends TestCase
         ]);
 
         $res->assertOk()->assertJsonPath('data.goal_type', 'lose')->assertJsonPath('data.daily_steps_goal', 12000);
-        // Mifflin-St Jeor: 10*80 + 6.25*175 - 5*30 + 5 = 1748.75 → 1749; ×1.55 = 2711; −450 = 2261
-        $this->assertSame(2261, $res->json('data.daily_calories'));
+        // Mifflin-St Jeor: 10*80 + 6.25*175 - 5*30 + 5 = 1748.75 → 1749; ×1.55 = 2711.
+        // 5 kg to lose over ~12 weeks = 0.42 kg/week ≈ −460 kcal/day → 2251, rounded to 2250.
+        $this->assertSame(2250, $res->json('data.daily_calories'));
         $this->assertNotSame(99999, $res->json('data.daily_calories'));
-        $this->assertSame(2261, $this->getJson('/api/v1/me/profile')->json('data.daily_calories'));
+        $this->assertSame(2250, $this->getJson('/api/v1/me/profile')->json('data.daily_calories'));
     }
 
     public function test_unknown_routes_and_validation_errors_use_the_envelope(): void

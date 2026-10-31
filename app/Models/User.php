@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Services\Photos;
+use App\Enums\Avatar;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -24,6 +24,7 @@ class User extends Authenticatable
         'name',
         'email',
         'locale',
+        'avatar',
     ];
 
     protected $hidden = [
@@ -36,18 +37,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'avatar' => Avatar::class,
         ];
-    }
-
-    protected static function booted(): void
-    {
-        // The photo file goes with the account (store-policy deletion must leave nothing behind).
-        static::deleting(fn (User $user) => app(Photos::class)->remove($user->avatar_path));
-    }
-
-    public function avatarUrl(): ?string
-    {
-        return Photos::urlFor($this->avatar_path);
     }
 
     public function meals(): HasMany

@@ -12,8 +12,6 @@ return [
     'account_created' => 'Your account is ready.',
     'signed_out' => 'You have been signed out.',
     'signed_out_everywhere' => 'You have been signed out on every device.',
-    'photo_saved' => 'Photo saved.',
-    'photo_removed' => 'Photo removed.',
     'account_deleted' => 'Your account and all its data have been deleted.',
     'profile_saved' => 'Your plan is saved.',
     'meal_created' => 'Meal logged.',
