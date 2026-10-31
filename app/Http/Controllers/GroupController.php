@@ -9,12 +9,14 @@ use App\Http\Requests\JoinGroupRequest;
 use App\Http\Requests\LeaderboardRequest;
 use App\Http\Requests\SignedInRequest;
 use App\Http\Requests\StoreGroupRequest;
+use App\Http\Requests\UploadPhotoRequest;
 use App\Http\Resources\GroupResource;
 use App\Http\Resources\LeaderboardResource;
 use App\Http\Resources\StandingResource;
 use App\Models\Group;
 use App\Models\User;
 use App\Services\Groups;
+use App\Services\Photos;
 use App\Services\StepLeaderboard;
 use App\Support\PaginatesResults;
 use Carbon\CarbonImmutable;
@@ -71,6 +73,30 @@ class GroupController extends Controller
         $group->loadCount('memberships');
 
         return $this->success(new GroupResource($group), __('messages.group_updated'));
+    }
+
+    public function updatePhoto(UploadPhotoRequest $request, Group $group, Photos $photos): JsonResponse
+    {
+        abort_if(Gate::denies('view', $group), 404, __('errors.record_not_found'));
+        $this->authorize('update', $group);
+
+        $path = $photos->replace($request->photo(), Photos::GROUPS_DIR, $group->photo_path);
+        $group->forceFill(['photo_path' => $path])->save();
+        $group->loadCount('memberships');
+
+        return $this->success(new GroupResource($group), __('messages.photo_saved'));
+    }
+
+    public function destroyPhoto(SignedInRequest $request, Group $group, Photos $photos): JsonResponse
+    {
+        abort_if(Gate::denies('view', $group), 404, __('errors.record_not_found'));
+        $this->authorize('update', $group);
+
+        $photos->remove($group->photo_path);
+        $group->forceFill(['photo_path' => null])->save();
+        $group->loadCount('memberships');
+
+        return $this->success(new GroupResource($group), __('messages.photo_removed'));
     }
 
     public function destroy(SignedInRequest $request, Group $group): JsonResponse

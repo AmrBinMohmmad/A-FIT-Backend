@@ -27,6 +27,13 @@ use Laravel\Sanctum\PersonalAccessToken;
  */
 class AuthController extends Controller
 {
+    /**
+     * Live sessions per account. Signing in on an eleventh device silently revokes the
+     * oldest token, so a lost phone's token cannot outlive ten later sign-ins and the
+     * token table stays bounded per user.
+     */
+    public const MAX_SESSIONS = 10;
+
     public function requestCode(RequestOtpRequest $request, OtpCodes $codes): JsonResponse
     {
         /** @var string $email */
@@ -86,6 +93,9 @@ class AuthController extends Controller
 
         $codes->consume($email);
 
+        $keep = $user->tokens()->latest('id')->take(self::MAX_SESSIONS - 1)->pluck('id');
+        $user->tokens()->whereNotIn('id', $keep)->delete();
+
         $deviceName = (string) ($request->validated('device_name') ?? 'mobile');
         $token = $user->createToken(mb_substr($deviceName, 0, 80))->plainTextToken;
 
@@ -107,5 +117,13 @@ class AuthController extends Controller
         }
 
         return $this->success(null, __('messages.signed_out'));
+    }
+
+    /** Revokes every token of the account — "sign out of all devices" after a lost phone. */
+    public function logoutAll(SignedInRequest $request): JsonResponse
+    {
+        $request->actor()->tokens()->delete();
+
+        return $this->success(null, __('messages.signed_out_everywhere'));
     }
 }

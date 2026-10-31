@@ -1,0 +1,10 @@
+$kind: http-request
+description: "Removes the avatar and its file."
+url: '{{base_url}}/me/avatar'
+method: DELETE
+order: 2600
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

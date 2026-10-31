@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\AuthController;
 use App\Mail\OtpCodeMail;
 use App\Models\User;
 use App\Services\OtpCodes;
@@ -125,6 +126,32 @@ final class AuthContractTest extends TestCase
         // The test app keeps the resolved guard between requests; a real client gets a fresh one.
         $this->app['auth']->forgetGuards();
         $this->withToken($token)->getJson('/api/v1/me')->assertUnauthorized();
+    }
+
+    public function test_logout_all_revokes_every_token_of_the_account(): void
+    {
+        $user = User::factory()->create();
+        $user->createToken('phone')->plainTextToken;
+        $keep = $user->createToken('tablet')->plainTextToken;
+        $this->assertSame(2, $user->tokens()->count());
+
+        $this->withToken($keep)->postJson('/api/v1/auth/logout-all')->assertOk();
+        $this->assertSame(0, $user->tokens()->count());
+    }
+
+    public function test_sign_in_keeps_at_most_ten_live_sessions(): void
+    {
+        $user = User::factory()->create(['email' => 'many@example.com']);
+        for ($i = 0; $i < 12; $i++) {
+            $user->createToken("device-$i");
+        }
+        $oldest = (int) $user->tokens()->oldest('id')->value('id');
+
+        $code = app(OtpCodes::class)->issue('many@example.com');
+        $this->postJson('/api/v1/auth/otp/verify', ['email' => 'many@example.com', 'code' => $code])->assertOk();
+
+        $this->assertSame(AuthController::MAX_SESSIONS, $user->tokens()->count());
+        $this->assertDatabaseMissing('personal_access_tokens', ['id' => $oldest]);
     }
 
     public function test_protected_route_requires_a_valid_token(): void

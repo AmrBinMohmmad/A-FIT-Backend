@@ -88,13 +88,14 @@ final class DailySummary
             $groupSummary = [
                 'id' => $primaryGroup->id,
                 'name' => $primaryGroup->name,
+                'photo_url' => $primaryGroup->photoUrl(),
                 'members_count' => (int) $primaryGroup->memberships_count,
                 'my_rank' => $me?->rank,
-                'leader' => $leader ? ['user_id' => $leader->user_id, 'name' => $leader->name, 'steps' => $leader->steps] : null,
+                'leader' => $leader ? ['user_id' => $leader->user_id, 'name' => $leader->name, 'avatar_url' => $leader->avatar_url, 'steps' => $leader->steps] : null,
                 'others' => $standings
                     ->where('user_id', '!=', $user->id)
                     ->take(3)
-                    ->map(fn ($row) => ['user_id' => $row->user_id, 'name' => $row->name, 'steps' => $row->steps])
+                    ->map(fn ($row) => ['user_id' => $row->user_id, 'name' => $row->name, 'avatar_url' => $row->avatar_url, 'steps' => $row->steps])
                     ->values()
                     ->all(),
             ];

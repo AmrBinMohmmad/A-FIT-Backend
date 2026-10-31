@@ -13,6 +13,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *
  * @property int $user_id
  * @property string $name
+ * @property string|null $avatar_url
  * @property string $role
  * @property int $steps
  * @property int $rank
@@ -24,6 +25,7 @@ class StandingResource extends JsonResource
         return [
             'user_id' => $this->user_id,
             'name' => $this->name,
+            'avatar_url' => $this->avatar_url,
             'role' => $this->role,
             'steps' => $this->steps,
             'rank' => $this->rank,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\Photos;
 use Database\Factories\GroupFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +30,16 @@ class Group extends Model
         return [
             'max_members' => 'integer',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(fn (Group $group) => app(Photos::class)->remove($group->photo_path));
+    }
+
+    public function photoUrl(): ?string
+    {
+        return Photos::urlFor($this->photo_path);
     }
 
     public function owner(): BelongsTo

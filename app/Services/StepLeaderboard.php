@@ -25,7 +25,7 @@ final class StepLeaderboard
     public function __construct(private readonly Cache $cache) {}
 
     /**
-     * @return Collection<int, object{user_id: int, name: string, role: string, steps: int, rank: int}>
+     * @return Collection<int, object{user_id: int, name: string, avatar_url: string|null, role: string, steps: int, rank: int}>
      */
     public function forPeriod(Group $group, LeaderboardPeriod $period, CarbonImmutable $anchor): Collection
     {
@@ -35,7 +35,7 @@ final class StepLeaderboard
 
         // The cache store holds plain arrays only: config('cache.serializable_classes') is
         // false, so a cached Collection of objects would come back as __PHP_Incomplete_Class.
-        /** @var list<array{user_id: int, name: string, role: string, steps: int, rank: int}> $rows */
+        /** @var list<array{user_id: int, name: string, avatar_url: string|null, role: string, steps: int, rank: int}> $rows */
         $rows = $this->cache->remember(
             $key,
             self::CACHE_SECONDS,
@@ -49,7 +49,7 @@ final class StepLeaderboard
      * Uncached standings for an arbitrary window (challenges use this with their own
      * window; the challenge screen is polled far less than the leaderboard).
      *
-     * @return Collection<int, object{user_id: int, name: string, role: string, steps: int, rank: int}>
+     * @return Collection<int, object{user_id: int, name: string, avatar_url: string|null, role: string, steps: int, rank: int}>
      */
     public function standings(Group $group, CarbonImmutable $from, CarbonImmutable $to): Collection
     {
@@ -60,12 +60,13 @@ final class StepLeaderboard
                 $join->on('step_entries.user_id', '=', 'group_members.user_id')
                     ->whereBetween('step_entries.date', [$from->toDateString(), $to->toDateString()]);
             })
-            ->groupBy('group_members.user_id', 'users.name', 'group_members.role')
+            ->groupBy('group_members.user_id', 'users.name', 'users.avatar_path', 'group_members.role')
             ->orderByDesc('steps')
             ->orderBy('users.name')
             ->get([
                 'group_members.user_id',
                 'users.name',
+                'users.avatar_path',
                 'group_members.role',
                 DB::raw('COALESCE(SUM(step_entries.steps), 0) as steps'),
             ]);
@@ -84,6 +85,7 @@ final class StepLeaderboard
             return (object) [
                 'user_id' => (int) $row->user_id,
                 'name' => (string) $row->name,
+                'avatar_url' => Photos::urlFor(is_string($row->avatar_path) ? $row->avatar_path : null),
                 'role' => $row->role instanceof GroupRole ? $row->role->value : (string) $row->role,
                 'steps' => $steps,
                 'rank' => $rank,

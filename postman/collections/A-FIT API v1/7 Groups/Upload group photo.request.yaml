@@ -1,0 +1,16 @@
+$kind: http-request
+description: "Owner only. Multipart `photo` (jpeg/png/webp, ≤ 2 MB)."
+url: '{{base_url}}/groups/{{group_id}}/photo'
+method: POST
+order: 7500
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+body:
+  type: formdata
+  formdata:
+    - key: photo
+      type: file
+      src: ''

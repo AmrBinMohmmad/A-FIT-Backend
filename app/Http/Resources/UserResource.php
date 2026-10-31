@@ -18,6 +18,7 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'locale' => $this->locale,
+            'avatar_url' => $this->avatarUrl(),
             'has_profile' => $this->relationLoaded('profile') ? $this->profile !== null : null,
             'profile' => new UserProfileResource($this->whenLoaded('profile')),
             'created_at' => $this->created_at?->toIso8601String(),

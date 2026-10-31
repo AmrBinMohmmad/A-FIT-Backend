@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Telescope\TelescopeServiceProvider as TelescopeBase;
 
@@ -34,6 +35,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Behind the TLS-terminating proxy every generated URL (photos, mail links) must be https.
+        if ($this->app->isProduction()) {
+            URL::forceScheme('https');
+        }
+
         Model::preventLazyLoading(! $this->app->isProduction());
         Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
 
@@ -67,6 +73,8 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         RateLimiter::for('steps-sync', fn (Request $request) => Limit::perMinute(12)->by('steps:'.$request->user()?->getAuthIdentifier()));
+
+        RateLimiter::for('uploads', fn (Request $request) => Limit::perMinute(10)->by('upl:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
 
         RateLimiter::for('mutations', fn (Request $request) => Limit::perMinute(60)->by('mut:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
     }

@@ -25,6 +25,7 @@ class GroupResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'photo_url' => $this->photoUrl(),
             'invite_code' => $this->invite_code,
             'owner_id' => $this->owner_id,
             'my_role' => $this->owner_id === $userId ? GroupRole::Owner->value : GroupRole::Member->value,

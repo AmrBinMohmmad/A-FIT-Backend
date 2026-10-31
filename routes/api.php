@@ -23,6 +23,7 @@ Route::prefix('auth/otp')->group(function (): void {
 
 Route::middleware(['auth:sanctum', 'throttle:api'])->group(function (): void {
     Route::post('auth/logout', [AuthController::class, 'logout']);
+    Route::post('auth/logout-all', [AuthController::class, 'logoutAll']);
 
     Route::get('me', [MeController::class, 'show']);
     Route::get('me/profile', [ProfileController::class, 'show']);
@@ -43,6 +44,14 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function (): void {
 
     // Step sync has its own tighter limiter: a client should batch, not stream.
     Route::put('steps', [StepController::class, 'sync'])->middleware('throttle:steps-sync');
+
+    // Photo uploads are heavier than JSON writes and have their own, tighter limiter.
+    Route::middleware('throttle:uploads')->group(function (): void {
+        Route::post('me/avatar', [MeController::class, 'updateAvatar']);
+        Route::delete('me/avatar', [MeController::class, 'destroyAvatar']);
+        Route::post('groups/{group}/photo', [GroupController::class, 'updatePhoto']);
+        Route::delete('groups/{group}/photo', [GroupController::class, 'destroyPhoto']);
+    });
 
     Route::middleware('throttle:mutations')->group(function (): void {
         Route::patch('me', [MeController::class, 'update']);

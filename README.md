@@ -70,3 +70,11 @@ the verify request storing `data.token` into the collection variable automatical
 
 Every response is `{ "flag": bool, "data": payload|null, "message": "one sentence" }`.
 Paginated payloads nest Laravel's paginator inside `data` (`data.data`, `data.meta.total`).
+
+## Photos
+
+Avatars and group photos are stored on the `public` disk (`storage/app/public/{avatars,groups}`,
+random file names, sniffed-type extensions — `App\Services\Photos`). Locally run
+`php artisan storage:link` once; in Docker, nginx serves `/storage/` straight from the shared
+`app_storage` volume (no PHP per image). Switch `config/filesystems.php`'s `public` disk to S3
+when one server is no longer enough — the code only ever asks `Storage::disk('public')`.

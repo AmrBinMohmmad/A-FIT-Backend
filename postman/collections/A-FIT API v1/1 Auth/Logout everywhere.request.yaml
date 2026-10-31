@@ -1,0 +1,10 @@
+$kind: http-request
+description: "Revokes every token of the account (lost phone). Sign in again afterwards."
+url: '{{base_url}}/auth/logout-all'
+method: POST
+order: 6500
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

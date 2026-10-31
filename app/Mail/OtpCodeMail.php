@@ -6,13 +6,15 @@ namespace App\Mail;
 
 use App\Services\OtpCodes;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeEncrypted;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class OtpCodeMail extends Mailable implements ShouldQueue
+/** Queued encrypted: the plaintext code never sits readable in Redis while it waits to be sent. */
+class OtpCodeMail extends Mailable implements ShouldBeEncrypted, ShouldQueue
 {
     use Queueable, SerializesModels;
 
