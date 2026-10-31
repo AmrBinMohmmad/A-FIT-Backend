@@ -1,0 +1,18 @@
+$kind: http-request
+description: "Owner only (403 for members)."
+url: '{{base_url}}/groups/{{group_id}}'
+method: PATCH
+order: 5000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "رفاق المشي ٢"
+    }

@@ -1,0 +1,33 @@
+$kind: http-request
+description: "Existing e-mail \u2192 data.token + data.user. Wrong code \u2192 400; five wrong codes \u2192 429 and the code is destroyed."
+url: '{{base_url}}/auth/otp/verify'
+method: POST
+order: 2000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{email}}",
+      "code": "{{code}}",
+      "device_name": "Postman"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const body = pm.response.json();
+      pm.test("envelope has exactly flag, data, message", () => {
+        pm.expect(Object.keys(body)).to.eql(["flag", "data", "message"]);
+      });
+      if (body && body.data && body.data.token) {
+        pm.collectionVariables.set("token", body.data.token);
+      }

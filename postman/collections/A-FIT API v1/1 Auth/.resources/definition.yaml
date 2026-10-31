@@ -1,0 +1,3 @@
+$kind: collection
+description: "Passwordless e-mail OTP. Both public legs are throttled; the response never reveals whether an e-mail has an account."
+order: 1000

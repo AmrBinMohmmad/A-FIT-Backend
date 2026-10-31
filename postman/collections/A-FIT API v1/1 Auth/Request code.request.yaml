@@ -1,0 +1,20 @@
+$kind: http-request
+description: "Always 200 whether or not the e-mail has an account. Throttled 5/min per IP, 2/min and 20/day per e-mail; a resend inside the 60 s cooldown answers 429."
+url: '{{base_url}}/auth/otp/request'
+method: POST
+order: 1000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{email}}"
+    }
+auth:
+  type: noauth

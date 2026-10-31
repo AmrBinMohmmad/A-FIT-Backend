@@ -1,0 +1,25 @@
+$kind: http-request
+description: "Physical inputs in; daily calories and macros are computed server-side (NutritionPlan). Steps and water goals are optional user choices."
+url: '{{base_url}}/me/profile'
+method: PUT
+order: 4000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "gender": "male",
+      "age": 30,
+      "height": 175,
+      "current_weight": 80,
+      "target_weight": 75,
+      "activity_level": "moderate",
+      "daily_steps_goal": 10000,
+      "water_goal_ml": 2500
+    }

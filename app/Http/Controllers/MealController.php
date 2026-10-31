@@ -1,136 +1,69 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
+use App\Http\Requests\DateRequest;
+use App\Http\Requests\MealsSummaryRequest;
+use App\Http\Requests\SignedInRequest;
+use App\Http\Requests\StoreMealRequest;
+use App\Http\Requests\UpdateMealRequest;
+use App\Http\Resources\DayTotalsResource;
+use App\Http\Resources\MealResource;
 use App\Models\Meal;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use App\Exceptions\MealException;
-
+use App\Services\MealTotals;
+use App\Support\PaginatesResults;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
 
 class MealController extends Controller
 {
-    use ApiResponse;
-    public function getUserMeals(Request $request){
-        $request->validate([
-            'date'=> ['nullable','date_format:Y-m-d'],
-        ]);
+    use PaginatesResults;
 
-        $query = Meal::where('user_id',Auth::id());
+    /** The caller's meals, newest first, optionally for one local day. */
+    public function index(DateRequest $request): JsonResponse
+    {
+        $query = Meal::query()
+            ->where('user_id', $request->actor()->id)
+            ->when($request->validated('date'), fn ($q, $date) => $q->whereDate('eaten_on', $date))
+            ->orderByDesc('eaten_on')
+            ->orderByDesc('id');
 
-        if($request->filled('date')){
-            $query->whereDate('created_at',$request->date);
-        };
+        $meals = $query->paginate($this->perPage($request, 50));
 
-        $userMeals = $query->latest()->get();
-
-        return $this->successResponse($userMeals,'تم جلب وجباتك بنجاح');
+        return $this->success(MealResource::collection($meals)->response()->getData(true));
     }
 
-    public function getAllMeals(){
-        $meals = Meal::with('user')->latest()->get();
-         if (!$meals){
-           return $this->errorResponse('تعذر جلب وجباتك');
-        }
-        return $this->successResponse($meals,'تم جلب وجباتك بنجاح');
+    public function summary(MealsSummaryRequest $request, MealTotals $totals): JsonResponse
+    {
+        return $this->success(DayTotalsResource::collection($totals->byDay($request->actor(), $request->from(), $request->to())));
     }
 
-    public function getMeal(int $id){
-        $meal = Meal::where('id',$id)
-        ->first();
-        if(!$meal){
-            return $this->errorResponse('الوجبة غير موجودة');
-        }
-        return $this->successResponse($meal,'تم جلب الوجبة بنجاح');
+    public function store(StoreMealRequest $request): JsonResponse
+    {
+        $meal = new Meal($request->validated());
+        $meal->user_id = $request->actor()->id;
+        $meal->save();
+
+        return $this->created(new MealResource($meal), __('messages.meal_created'));
     }
 
-    public function createMeal(Request $request){
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'min:2'],
-            'calories' => ['required', 'integer', 'min:0'],
-            'protein' => ['nullable', 'integer', 'min:0'],
-            'carbs' => ['nullable', 'integer', 'min:0'],
-            'fat' => ['nullable', 'integer', 'min:0'],
-            'meal_type' => ['nullable', 'string', 'in:breakfast,lunch,dinner,snack,other'],
-            'created_at' => ['nullable', 'date'],
-        ], [
-            'name.required' => 'حقل اسم الوجبة مطلوب',
-            'name.min' => 'اسم الوجبة يجب أن يتكون من حرفين على الأقل',
-            'calories.required' => 'حقل السعرات الحرارية مطلوب',
-            'calories.integer' => 'السعرات يجب أن تكون عدداً صحيحاً',
-            'protein.integer' => 'البروتين يجب أن يكون عدداً صحيحاً',
-            'carbs.integer' => 'الكاربوهيدرات يجب أن تكون عدداً صحيحاً',
-            'fat.integer' => 'الدهون يجب أن تكون عدداً صحيحاً',
-            'meal_type.in' => 'نوع الوجبة غير صالح',
-        ]);
+    public function update(UpdateMealRequest $request, Meal $meal): JsonResponse
+    {
+        abort_if(Gate::denies('update', $meal), 404, __('errors.record_not_found'));
 
-        $validated['user_id'] = Auth::id();
-        $meal = Meal::create($validated);
+        $meal->fill($request->validated())->save();
 
-        if(!$meal){
-            return $this->errorResponse();
-        }
-
-        return $this->successResponse($meal,'تم إنشاء الوجبة بنجاح');
+        return $this->success(new MealResource($meal), __('messages.meal_updated'));
     }
-    public function editMeal(Request $request, int $id){
 
-        $meal = Meal::where('id',$id)->where('user_id',Auth::id())->first();
-
-        if(!$meal){
-            return $this-> errorResponse('الوجبة غير موجودة او غير مصرح لك بتعديلها');
-          };
-
-        $validated = $request->validate(
-            [
-            'name' => ['sometimes','nullable', 'string', 'min:2'],
-            'calories' => ['sometimes','nullable', 'integer', 'min:0'],
-            'protein' => ['sometimes','nullable', 'integer', 'min:0'],
-            'carbs' => ['sometimes','nullable', 'integer', 'min:0'],
-            'fat' => ['sometimes','nullable', 'integer', 'min:0'],
-            'meal_type' => ['sometimes','nullable', 'string', 'in:breakfast,lunch,dinner,snack,other'],
-            'created_at' => ['sometimes', 'nullable', 'date'],
-            ], [
-            'name.required' => 'حقل اسم الوجبة مطلوب',
-            'name.min' => 'اسم الوجبة يجب أن يتكون من حرفين على الأقل',
-            'calories.integer' => 'السعرات يجب أن تكون عدداً صحيحاً',
-            'protein.integer' => 'البروتين يجب أن يكون عدداً صحيحاً',
-            'carbs.integer' => 'الكاربوهيدرات يجب أن تكون عدداً صحيحاً',
-            'fat.integer' => 'الدهون يجب أن تكون عدداً صحيحاً',
-            'meal_type.in' => 'نوع الوجبة غير صالح',
-        ]
-            );
-
-        $meal->update($validated);
-
-        return $this->successResponse($meal->fresh(),'تم تحديث الوجبة بنجاح');
-    }
-    public function deleteMeal(int $id){
-        $meal = Meal::where('id',$id)->where('user_id',Auth::id())->first();
-        if(!$meal){
-            return $this-> errorResponse('الوجبة غير موجودة او غير مصرح لك بحذفها');
-        };
+    public function destroy(SignedInRequest $request, Meal $meal): JsonResponse
+    {
+        abort_if(Gate::denies('delete', $meal), 404, __('errors.record_not_found'));
 
         $meal->delete();
 
-        return $this->successResponse(null,'تم حذف الوجبة بنجاح');
-    }
-
-    public function clearUserMeals(Request $request){
-        $request->validate([
-            'date' => ['nullable', 'date_format:Y-m-d'],
-        ]);
-
-        $query = Meal::where('user_id', Auth::id());
-
-        if ($request->filled('date')) {
-            $query->whereDate('created_at', $request->date)->delete();
-            return $this->successResponse(null, 'تم مسح وجبات هذا اليوم بنجاح');
-        }
-
-        $query->delete();
-        return $this->successResponse(null, 'تم مسح جميع وجباتك بنجاح');
+        return $this->deleted(__('messages.meal_deleted'));
     }
 }

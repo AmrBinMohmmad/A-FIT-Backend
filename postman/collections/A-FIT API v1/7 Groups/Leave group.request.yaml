@@ -1,0 +1,10 @@
+$kind: http-request
+description: "Members only; the owner gets 409."
+url: '{{base_url}}/groups/{{group_id}}/leave'
+method: POST
+order: 9000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

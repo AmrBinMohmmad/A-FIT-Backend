@@ -1,0 +1,10 @@
+$kind: http-request
+description: "The signed-in user with has_profile and the embedded profile."
+url: '{{base_url}}/me'
+method: GET
+order: 1000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

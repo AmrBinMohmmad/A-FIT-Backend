@@ -1,0 +1,19 @@
+$kind: http-request
+description: "Name and locale (ar|en) only; e-mail cannot change."
+url: '{{base_url}}/me'
+method: PATCH
+order: 2000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "فيصل",
+      "locale": "ar"
+    }

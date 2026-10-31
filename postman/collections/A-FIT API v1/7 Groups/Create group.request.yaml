@@ -1,0 +1,29 @@
+$kind: http-request
+description: "Caller becomes owner; an 8-character invite code is generated."
+url: '{{base_url}}/groups'
+method: POST
+order: 2000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "رفاق المشي"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const body = pm.response.json();
+      pm.test("envelope has exactly flag, data, message", () => {
+        pm.expect(Object.keys(body)).to.eql(["flag", "data", "message"]);
+        pm.expect(body).to.not.have.property("errors");
+      });
+      if (body.data && body.data.id) pm.collectionVariables.set("group_id", String(body.data.id));
+      if (body.data && body.data.invite_code) pm.collectionVariables.set("invite_code", body.data.invite_code);

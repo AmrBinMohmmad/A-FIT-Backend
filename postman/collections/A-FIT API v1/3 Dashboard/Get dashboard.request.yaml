@@ -1,0 +1,14 @@
+$kind: http-request
+description: "Steps, nutrition totals + targets, water, latest weight, primary group summary and the nearest challenge for one local day."
+url: '{{base_url}}/dashboard?date={{today}}'
+method: GET
+order: 1000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+queryParams:
+  - key: date
+    value: '{{today}}'
+    description: "YYYY-MM-DD, defaults to today"

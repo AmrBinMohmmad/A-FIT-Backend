@@ -1,0 +1,10 @@
+$kind: http-request
+description: "Creator or group owner."
+url: '{{base_url}}/challenges/{{challenge_id}}'
+method: DELETE
+order: 4000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

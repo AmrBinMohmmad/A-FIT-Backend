@@ -1,0 +1,45 @@
+# Rakaya kit v4.3.0 — backend quality gate (D10.21). Steps are EXACTLY the members of
+# `composer check`; any build/deploy job must `needs: quality`.
+name: backend-quality
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, pdo_sqlite, sqlite3, bcmath, intl, zip
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Boot from the example environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Formatting (composer lint)
+        run: composer lint
+
+      - name: Static analysis (composer analyse)
+        run: composer analyse
+
+      - name: Tests incl. architecture gate (composer test)
+        run: composer test
+
+  image:
+    needs: quality
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the production image
+        run: docker build -t a-fit-api:${{ github.sha }} .

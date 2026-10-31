@@ -1,0 +1,15 @@
+$kind: http-request
+description: "Per-day totals over a window of at most 31 days."
+url: '{{base_url}}/meals/summary?from=2026-10-01&to={{today}}'
+method: GET
+order: 2000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+queryParams:
+  - key: from
+    value: '2026-10-01'
+  - key: to
+    value: '{{today}}'

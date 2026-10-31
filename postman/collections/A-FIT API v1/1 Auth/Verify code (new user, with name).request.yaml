@@ -1,0 +1,34 @@
+$kind: http-request
+description: "Creates the account and returns the token."
+url: '{{base_url}}/auth/otp/verify'
+method: POST
+order: 4000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "new@example.com",
+      "code": "{{code}}",
+      "name": "نورة",
+      "device_name": "Postman"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const body = pm.response.json();
+      pm.test("envelope has exactly flag, data, message", () => {
+        pm.expect(Object.keys(body)).to.eql(["flag", "data", "message"]);
+      });
+      if (body && body.data && body.data.token) {
+        pm.collectionVariables.set("token", body.data.token);
+      }

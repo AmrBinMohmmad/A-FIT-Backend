@@ -1,58 +1,72 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# A-FIT API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel 13 JSON API behind the A-FIT mobile app (Expo). Passwordless e-mail OTP sign-in,
+meals and nutrition targets, background step totals from HealthKit / Health Connect,
+water and weight logs, friend groups with invite codes, step leaderboards and challenges.
 
-## About Laravel
+Built under the Rakaya standard (see `CLAUDE.md`): strict `{flag, data, message}` envelope,
+Sanctum bearer tokens, every route policy-checked, en/ar messages via `Accept-Language`,
+and an architecture test that fails the build on hand-rolled responses, unthrottled public
+routes, raw DB access in controllers, missing strict types and more.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Run locally
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+cp .env.example .env && php artisan key:generate
+# local overrides: APP_ENV=local APP_DEBUG=true DB_CONNECTION=sqlite CACHE_STORE=file QUEUE_CONNECTION=sync MAIL_MAILER=log
+touch database/database.sqlite && php artisan migrate
+php artisan serve --host 0.0.0.0 --port 8000
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+With `MAIL_MAILER=log` the OTP code is written to `storage/logs/laravel.log`. For local
+testing you may set `DEV_MASTER_OTP=000000`: that code then signs in any e-mail, but only while
+`APP_ENV` is `local` or `testing`; the API ignores the variable in every other environment.
 
-## Contributing
+## Quality gate
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+composer check      # pint --test, phpstan, phpunit (incl. tests/Unit/ArchitectureTest.php)
+```
 
-## Code of Conduct
+CI (`.github/workflows/backend.yml`) runs exactly those three members; the image build
+depends on them passing.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Production
 
-## Security Vulnerabilities
+`docker compose up -d --build` starts nginx → php-fpm, a Redis-backed queue worker (OTP
+mail), the scheduler (token pruning), MySQL 8.4 and Redis. Set every value in
+`.env.example`; TLS terminates in front of nginx. Redis is required in production: the OTP
+store, the rate limiters and the leaderboard cache live in it and must be shared by the app
+and queue containers.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Postman
 
-## License
+`postman/collections/A-FIT API v1` is a Git-native (v3) collection covering every route, with
+the verify request storing `data.token` into the collection variable automatically. Lint it with
+`postman collection lint "postman/collections/A-FIT API v1"`; the Local environment points at
+`http://127.0.0.1:8000/api/v1`.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## API (all under `/api/v1`, JSON, `Accept-Language: ar|en`)
+
+| Method | Path | Notes |
+|---|---|---|
+| POST | `auth/otp/request` | `{email}` → always 200. Throttled 5/min per IP, 2/min and 20/day per e-mail |
+| POST | `auth/otp/verify` | `{email, code, name?, device_name?}` → `data.token` + `data.user`, or `requires_name: true` |
+| POST | `auth/logout` | revokes the current token |
+| GET/PATCH/DELETE | `me` | profile fields `name`, `locale`; DELETE removes the account and all data |
+| GET/PUT | `me/profile` | physical inputs in, server-computed daily targets out |
+| GET | `dashboard?date=` | the whole home screen in one call |
+| GET/POST | `meals`, `meals/{id}` (PUT/DELETE) | paginated per day; `meals/summary?from&to` ≤ 31 days |
+| PUT | `steps` | batch upsert `{entries:[{date, steps, source}]}` ≤ 31 rows, 12/min |
+| GET | `steps?from&to` | ≤ 90 days |
+| GET/PUT | `water/{date}` | absolute daily total |
+| GET/POST/DELETE | `weights`, `weights/{id}` | one per day, ≤ 366 days history |
+| GET/POST | `groups`, `groups/join {code}` | groups the caller belongs to |
+| GET/PATCH/DELETE | `groups/{id}` | non-members get 404 on every group route |
+| POST | `groups/{id}/leave`, `groups/{id}/invite/rotate`; DELETE `groups/{id}/members/{user}` | owner-only where it matters |
+| GET | `groups/{id}/leaderboard?period=today\|week\|month&date=` | cached 60 s per group and window |
+| GET/POST | `groups/{id}/challenges`; GET/DELETE `challenges/{id}` | standings on the detail view |
+
+Every response is `{ "flag": bool, "data": payload|null, "message": "one sentence" }`.
+Paginated payloads nest Laravel's paginator inside `data` (`data.data`, `data.meta.total`).

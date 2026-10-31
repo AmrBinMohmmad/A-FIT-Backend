@@ -1,0 +1,9 @@
+$kind: http-request
+url: '{{base_url}}/weights/1'
+method: DELETE
+order: 5000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

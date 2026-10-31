@@ -1,0 +1,3 @@
+$kind: collection
+description: "Batch upsert of daily step totals from the phone's health store; bounded history."
+order: 5000

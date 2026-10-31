@@ -1,0 +1,42 @@
+$kind: collection
+name: A-FIT API v1
+description: |-
+  A-FIT (أي-فت) JSON API, version 1. Every response — success or failure — is exactly
+  { "flag": bool, "data": payload|null, "message": "one sentence" }.
+  Sign-in is passwordless: request a code, verify it (new e-mails also send a name), and the
+  afterResponse script stores data.token in the collection variable `token`.
+  Send Accept-Language: ar or en to pick the message language.
+variables:
+  - key: base_url
+    value: 'http://127.0.0.1:8000/api/v1'
+    description: Local artisan serve. Point at the deployed API for other environments.
+  - key: token
+    value: ''
+    description: Sanctum bearer token, set automatically by the verify request.
+  - key: email
+    value: 'amr@example.com'
+  - key: code
+    value: '123456'
+    description: With MAIL_MAILER=log the code is in storage/logs/laravel.log.
+  - key: today
+    value: '2026-10-30'
+  - key: group_id
+    value: '1'
+  - key: challenge_id
+    value: '1'
+  - key: meal_id
+    value: '1'
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: '{{token}}'
+scripts:
+  - type: http:afterResponse
+    language: text/javascript
+    code: |-
+      const body = pm.response.json();
+      pm.test("envelope has exactly flag, data, message", () => {
+        pm.expect(Object.keys(body)).to.eql(["flag", "data", "message"]);
+        pm.expect(body).to.not.have.property("errors");
+      });

@@ -1,0 +1,10 @@
+$kind: http-request
+description: "Paginated, newest ending first; list items omit standings."
+url: '{{base_url}}/groups/{{group_id}}/challenges'
+method: GET
+order: 1000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

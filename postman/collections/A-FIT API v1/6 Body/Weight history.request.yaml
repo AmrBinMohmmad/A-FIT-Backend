@@ -1,0 +1,15 @@
+$kind: http-request
+description: "Inclusive window of at most 366 days."
+url: '{{base_url}}/weights?from=2025-10-30&to={{today}}'
+method: GET
+order: 3000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+queryParams:
+  - key: from
+    value: '2025-10-30'
+  - key: to
+    value: '{{today}}'

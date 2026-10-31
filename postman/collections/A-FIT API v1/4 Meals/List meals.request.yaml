@@ -1,0 +1,17 @@
+$kind: http-request
+description: "Paginated; filter by local day. per_page \u2264 100."
+url: '{{base_url}}/meals?date={{today}}&per_page=50&page=1'
+method: GET
+order: 1000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+queryParams:
+  - key: date
+    value: '{{today}}'
+  - key: per_page
+    value: '50'
+  - key: page
+    value: '1'

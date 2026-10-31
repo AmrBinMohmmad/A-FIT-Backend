@@ -1,0 +1,16 @@
+$kind: http-request
+description: "Ranked standings for a period; cached 60 s per group and window."
+url: '{{base_url}}/groups/{{group_id}}/leaderboard?period=today&date={{today}}'
+method: GET
+order: 6000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+queryParams:
+  - key: period
+    value: 'today'
+    description: "today | week | month"
+  - key: date
+    value: '{{today}}'

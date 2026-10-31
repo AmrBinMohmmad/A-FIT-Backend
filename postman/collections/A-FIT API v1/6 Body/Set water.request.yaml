@@ -1,0 +1,18 @@
+$kind: http-request
+description: "Absolute daily total in ml."
+url: '{{base_url}}/water/{{today}}'
+method: PUT
+order: 2000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "ml": 1250
+    }

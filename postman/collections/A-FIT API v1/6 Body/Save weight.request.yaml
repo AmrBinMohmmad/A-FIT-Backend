@@ -1,0 +1,19 @@
+$kind: http-request
+description: "One entry per day; saving the same day replaces it."
+url: '{{base_url}}/weights'
+method: POST
+order: 4000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "date": "{{today}}",
+      "weight_kg": 82.4
+    }

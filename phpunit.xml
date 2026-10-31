@@ -18,6 +18,7 @@
         </include>
     </source>
     <php>
+        <!-- Rakaya kit phpunit-env-snippet: hermetic suite regardless of the local .env. -->
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
@@ -29,8 +30,9 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
-        <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
-        <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="SANCTUM_TOKEN_EXPIRATION" value="43200" force="true"/>
+        <!-- Tests enable the dev master code explicitly; a developer .env must not leak it in. -->
+        <env name="DEV_MASTER_OTP" value="" force="true"/>
     </php>
 </phpunit>

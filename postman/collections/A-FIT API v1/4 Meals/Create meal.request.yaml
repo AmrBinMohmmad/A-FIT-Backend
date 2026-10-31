@@ -1,0 +1,33 @@
+$kind: http-request
+url: '{{base_url}}/meals'
+method: POST
+order: 3000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "صدر دجاج مع أرز",
+      "calories": 620,
+      "protein": 45,
+      "carbs": 60,
+      "fat": 14,
+      "meal_type": "lunch",
+      "eaten_on": "{{today}}"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const body = pm.response.json();
+      pm.test("envelope has exactly flag, data, message", () => {
+        pm.expect(Object.keys(body)).to.eql(["flag", "data", "message"]);
+        pm.expect(body).to.not.have.property("errors");
+      });
+      if (body.data && body.data.id) pm.collectionVariables.set("meal_id", String(body.data.id));

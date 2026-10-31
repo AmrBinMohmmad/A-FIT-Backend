@@ -1,0 +1,10 @@
+$kind: http-request
+description: "Deletes the user and all data; owned groups pass to the longest-standing member or are deleted."
+url: '{{base_url}}/me'
+method: DELETE
+order: 5000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
