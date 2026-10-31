@@ -10,10 +10,12 @@ use App\Http\Requests\SignedInRequest;
 use App\Http\Requests\StoreMealRequest;
 use App\Http\Requests\UpdateMealRequest;
 use App\Http\Resources\DayTotalsResource;
+use App\Http\Resources\FrequentMealResource;
 use App\Http\Resources\MealResource;
 use App\Models\Meal;
 use App\Services\MealTotals;
 use App\Support\PaginatesResults;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 
@@ -38,6 +40,12 @@ class MealController extends Controller
     public function summary(MealsSummaryRequest $request, MealTotals $totals): JsonResponse
     {
         return $this->success(DayTotalsResource::collection($totals->byDay($request->actor(), $request->from(), $request->to())));
+    }
+
+    /** Most-logged meals of the last 60 days, for one-tap re-logging. */
+    public function frequent(SignedInRequest $request, MealTotals $totals): JsonResponse
+    {
+        return $this->success(FrequentMealResource::collection($totals->frequent($request->actor(), CarbonImmutable::today())));
     }
 
     public function store(StoreMealRequest $request): JsonResponse

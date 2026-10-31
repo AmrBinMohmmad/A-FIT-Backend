@@ -101,7 +101,26 @@ final class StepsAndBodyTest extends TestCase
             ->assertJsonPath('data.nutrition.targets.calories', 2150)
             ->assertJsonPath('data.water.ml', 0)
             ->assertJsonPath('data.group', null)
-            ->assertJsonPath('data.has_profile', true);
+            ->assertJsonPath('data.has_profile', true)
+            ->assertJsonCount(7, 'data.steps.week')
+            ->assertJsonPath('data.steps.week.6.date', '2026-10-30')
+            ->assertJsonPath('data.steps.week.6.steps', 7482)
+            ->assertJsonPath('data.steps.streak', 0);
         $this->assertEnvelope($res, true);
+    }
+
+    public function test_dashboard_streak_counts_consecutive_days_on_goal(): void
+    {
+        $user = $this->actingAsUser();
+        UserProfile::factory()->create(['user_id' => $user->id, 'daily_steps_goal' => 5000]);
+        foreach (['2026-10-28', '2026-10-29', '2026-10-30'] as $day) {
+            StepEntry::factory()->create(['user_id' => $user->id, 'date' => $day, 'steps' => 6000]);
+        }
+        StepEntry::factory()->create(['user_id' => $user->id, 'date' => '2026-10-27', 'steps' => 100]);
+
+        $this->getJson('/api/v1/dashboard?date=2026-10-30')->assertOk()->assertJsonPath('data.steps.streak', 3);
+        // Today not yet on goal: the streak of earlier days still shows.
+        StepEntry::query()->where('date', '2026-10-30')->update(['steps' => 10]);
+        $this->getJson('/api/v1/dashboard?date=2026-10-30')->assertOk()->assertJsonPath('data.steps.streak', 2);
     }
 }

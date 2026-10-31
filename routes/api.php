@@ -30,6 +30,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function (): void {
 
     Route::get('meals', [MealController::class, 'index']);
     Route::get('meals/summary', [MealController::class, 'summary']);
+    Route::get('meals/frequent', [MealController::class, 'frequent']);
     Route::get('steps', [StepController::class, 'history']);
     Route::get('water/{date}', [WaterController::class, 'show']);
     Route::get('weights', [WeightController::class, 'history']);

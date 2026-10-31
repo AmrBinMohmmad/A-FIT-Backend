@@ -32,6 +32,33 @@ final class DailySummary
 
         $stepEntry = StepEntry::query()->where('user_id', $user->id)->whereDate('date', $date->toDateString())->first();
 
+        $stepsGoal = $profile?->daily_steps_goal ?? 10000;
+
+        // Last 60 days of step totals: feeds the 7-day strip and the goal streak in ONE query.
+        $recent = StepEntry::query()
+            ->where('user_id', $user->id)
+            ->whereBetween('date', [$date->subDays(59)->toDateString(), $date->toDateString()])
+            ->orderBy('date')
+            ->get(['date', 'steps'])
+            ->keyBy(fn (StepEntry $e) => $e->date->toDateString());
+
+        $week = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $key = $date->subDays($i)->toDateString();
+            $week[] = ['date' => $key, 'steps' => (int) ($recent->get($key)?->steps ?? 0)];
+        }
+
+        // Streak: consecutive days on goal ending today (today counts only once it is reached).
+        $streak = 0;
+        for ($cursor = $date; $cursor->gte($date->subDays(59)); $cursor = $cursor->subDay()) {
+            $steps = (int) ($recent->get($cursor->toDateString())?->steps ?? 0);
+            if ($steps >= $stepsGoal) {
+                $streak++;
+            } elseif (! $cursor->equalTo($date)) {
+                break;
+            }
+        }
+
         $mealTotals = Meal::query()
             ->where('user_id', $user->id)
             ->whereDate('eaten_on', $date->toDateString())
@@ -104,9 +131,11 @@ final class DailySummary
             'date' => $date->toDateString(),
             'steps' => [
                 'steps' => $stepEntry?->steps ?? 0,
-                'goal' => $profile?->daily_steps_goal ?? 10000,
+                'goal' => $stepsGoal,
                 'source' => $stepEntry?->source?->value,
                 'synced_at' => $stepEntry?->synced_at?->toIso8601String(),
+                'streak' => $streak,
+                'week' => $week,
             ],
             'nutrition' => [
                 'meals_count' => (int) ($mealTotals->meals_count ?? 0),

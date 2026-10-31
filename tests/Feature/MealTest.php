@@ -58,6 +58,19 @@ final class MealTest extends TestCase
         $this->assertDatabaseHas('meals', ['id' => $theirs->id, 'calories' => $theirs->calories]);
     }
 
+    public function test_frequent_meals_are_ranked_by_how_often_they_were_logged(): void
+    {
+        $user = $this->actingAsUser();
+        foreach (range(1, 3) as $i) {
+            Meal::factory()->create(['user_id' => $user->id, 'name' => 'شوفان', 'meal_type' => 'breakfast', 'calories' => 300 + $i, 'eaten_on' => now()->subDays($i)->toDateString()]);
+        }
+        Meal::factory()->create(['user_id' => $user->id, 'name' => 'سلطة', 'meal_type' => 'dinner', 'calories' => 200, 'eaten_on' => now()->toDateString()]);
+        Meal::factory()->create(['name' => 'theirs']);
+
+        $res = $this->getJson('/api/v1/meals/frequent');
+        $res->assertOk()->assertJsonCount(2, 'data')->assertJsonPath('data.0.name', 'شوفان')->assertJsonPath('data.0.times', 3)->assertJsonPath('data.0.calories', 302);
+    }
+
     public function test_summary_window_is_bounded(): void
     {
         $this->actingAsUser();
