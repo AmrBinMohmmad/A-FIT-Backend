@@ -17,6 +17,8 @@ return [
     'meal_created' => 'Meal logged.',
     'meal_updated' => 'Meal updated.',
     'meal_deleted' => 'Meal removed.',
+    'food_created' => 'Food saved to your list.',
+    'food_deleted' => 'Food removed.',
     'steps_synced' => 'Steps synced.',
     'water_saved' => 'Water intake saved.',
     'weight_saved' => 'Weight saved.',

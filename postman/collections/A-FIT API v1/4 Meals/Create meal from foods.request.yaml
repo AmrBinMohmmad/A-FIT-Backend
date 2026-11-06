@@ -1,0 +1,23 @@
+$kind: http-request
+description: "Compose a meal from catalog items (grams or servings each). Totals and the name (when omitted) are computed server-side; client-sent calories/macros are ignored."
+url: '{{base_url}}/meals'
+method: POST
+order: 1500
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "meal_type": "breakfast",
+      "eaten_on": "{{today}}",
+      "items": [
+        { "food_id": 1, "servings": 2 },
+        { "food_id": 10, "grams": 60 }
+      ]
+    }

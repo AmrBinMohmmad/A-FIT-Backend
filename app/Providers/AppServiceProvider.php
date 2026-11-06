@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Models\Challenge;
+use App\Models\Food;
 use App\Models\Group;
 use App\Models\Meal;
 use App\Models\WeightEntry;
 use App\Policies\ChallengePolicy;
+use App\Policies\FoodPolicy;
 use App\Policies\GroupPolicy;
 use App\Policies\MealPolicy;
 use App\Policies\WeightEntryPolicy;
@@ -44,6 +46,7 @@ class AppServiceProvider extends ServiceProvider
         Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
 
         Gate::policy(Meal::class, MealPolicy::class);
+        Gate::policy(Food::class, FoodPolicy::class);
         Gate::policy(Group::class, GroupPolicy::class);
         Gate::policy(Challenge::class, ChallengePolicy::class);
         Gate::policy(WeightEntry::class, WeightEntryPolicy::class);
