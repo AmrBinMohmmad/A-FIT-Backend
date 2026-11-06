@@ -16,6 +16,8 @@ composer install
 cp .env.example .env && php artisan key:generate
 # local overrides: APP_ENV=local APP_DEBUG=true DB_CONNECTION=sqlite CACHE_STORE=file QUEUE_CONNECTION=sync MAIL_MAILER=log
 touch database/database.sqlite && php artisan migrate
+php artisan db:seed                 # the food catalog (idempotent; re-run after editing database/data/foods.json)
+php artisan foods:import-off        # optional: brand products sold in Saudi Arabia from Open Food Facts
 php artisan serve --host 0.0.0.0 --port 8000
 ```
 
@@ -61,6 +63,16 @@ the next merge continues from there.
 Repository secrets needed: `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (a Docker Hub access
 token); until they exist the image step skips and the release says so. Deploy by setting
 `DOCKER_IMAGE=amromohmmad/a_fit_backend:<tag>` in the server's `.env` and `docker compose up -d`.
+
+## Food catalog
+
+`database/data/foods.json` is the curated generic catalog (per-100 g values from USDA FoodData
+Central reference entries, Arabic names, household servings); `FoodCatalogSeeder` upserts it by
+`catalog_key`, so it runs on every deploy. Kinds of an item (egg sizes, toast types) point at
+their generic row through `generic_id`. Brand products are never typed in by hand: run
+`php artisan foods:import-off` to pull products sold in a country from Open Food Facts (ODbL;
+the app credits it) as variants, or let users add a food from the package label (private to
+them). Meals log portions of these foods; totals are computed server-side and snapshotted.
 
 ## Postman
 
