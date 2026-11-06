@@ -19,6 +19,7 @@ return [
     'meal_deleted' => 'تم حذف الوجبة.',
     'food_created' => 'تم حفظ الصنف في قائمتك.',
     'food_deleted' => 'تمت إزالة الصنف.',
+    'food_imported' => 'أُضيف المنتج إلى القائمة.',
     'steps_synced' => 'تمت مزامنة الخطوات.',
     'water_saved' => 'تم حفظ كمية الماء.',
     'weight_saved' => 'تم حفظ الوزن.',
