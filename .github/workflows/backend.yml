@@ -23,8 +23,17 @@ env:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    outputs:
+      dockerhub: ${{ steps.secrets.outputs.dockerhub }}
     steps:
       - uses: actions/checkout@v4
+
+      # Secrets are not readable in a job-level `if`; surface their presence as an output so
+      # the image job skips (instead of failing) until DOCKERHUB_* are configured.
+      - id: secrets
+        env:
+          HAS_DOCKERHUB: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+        run: echo "dockerhub=$HAS_DOCKERHUB" >> "$GITHUB_OUTPUT"
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -51,7 +60,7 @@ jobs:
 
   image:
     needs: quality
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && needs.quality.outputs.dockerhub == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
