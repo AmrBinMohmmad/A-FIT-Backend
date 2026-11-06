@@ -13,6 +13,7 @@ use App\Http\Resources\DayTotalsResource;
 use App\Http\Resources\FrequentMealResource;
 use App\Http\Resources\MealResource;
 use App\Models\Meal;
+use App\Services\MealComposer;
 use App\Services\MealTotals;
 use App\Support\PaginatesResults;
 use Carbon\CarbonImmutable;
@@ -29,6 +30,7 @@ class MealController extends Controller
         $query = Meal::query()
             ->where('user_id', $request->actor()->id)
             ->when($request->validated('date'), fn ($q, $date) => $q->whereDate('eaten_on', $date))
+            ->with('items')
             ->orderByDesc('eaten_on')
             ->orderByDesc('id');
 
@@ -48,20 +50,19 @@ class MealController extends Controller
         return $this->success(FrequentMealResource::collection($totals->frequent($request->actor(), CarbonImmutable::today())));
     }
 
-    public function store(StoreMealRequest $request): JsonResponse
+    /** Typed macros, or composed from catalog `items` (totals computed server-side). */
+    public function store(StoreMealRequest $request, MealComposer $composer): JsonResponse
     {
-        $meal = new Meal($request->validated());
-        $meal->user_id = $request->actor()->id;
-        $meal->save();
+        $meal = $composer->save($request->actor(), new Meal, $request->mealAttributes(), $request->items());
 
         return $this->created(new MealResource($meal), __('messages.meal_created'));
     }
 
-    public function update(UpdateMealRequest $request, Meal $meal): JsonResponse
+    public function update(UpdateMealRequest $request, Meal $meal, MealComposer $composer): JsonResponse
     {
         abort_if(Gate::denies('update', $meal), 404, __('errors.record_not_found'));
 
-        $meal->fill($request->validated())->save();
+        $meal = $composer->save($request->actor(), $meal, $request->mealAttributes(), $request->items());
 
         return $this->success(new MealResource($meal), __('messages.meal_updated'));
     }
