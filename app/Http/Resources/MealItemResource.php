@@ -24,6 +24,8 @@ class MealItemResource extends JsonResource
             'protein' => $this->protein,
             'carbs' => $this->carbs,
             'fat' => $this->fat,
+            // The live catalog row (null when the food was deleted) so a meal can be re-opened in the composer.
+            'food' => new FoodResource($this->whenLoaded('food')),
         ];
     }
 }

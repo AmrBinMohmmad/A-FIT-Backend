@@ -45,7 +45,7 @@ final class MealComposer
                 $meal->items()->createMany($lines);
             }
 
-            return $meal->load('items');
+            return $meal->load('items.food');
         });
     }
 

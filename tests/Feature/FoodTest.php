@@ -142,7 +142,8 @@ final class FoodTest extends TestCase
         $mealId = (int) $res->json('data.id');
 
         // The day's list carries the items, and recent foods reflect what was logged.
-        $this->getJson("/api/v1/meals?date={$day}")->assertOk()->assertJsonCount(2, 'data.data.0.items');
+        $this->getJson("/api/v1/meals?date={$day}")->assertOk()->assertJsonCount(2, 'data.data.0.items')
+            ->assertJsonPath('data.data.0.items.0.food.id', $egg->id);
         $recent = $this->getJson('/api/v1/foods/recent')->assertOk();
         $this->assertSame([$toast->id, $egg->id], array_column($recent->json('data'), 'id'));
 

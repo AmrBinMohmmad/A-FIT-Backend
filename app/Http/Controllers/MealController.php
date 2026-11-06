@@ -30,7 +30,7 @@ class MealController extends Controller
         $query = Meal::query()
             ->where('user_id', $request->actor()->id)
             ->when($request->validated('date'), fn ($q, $date) => $q->whereDate('eaten_on', $date))
-            ->with('items')
+            ->with('items.food')
             ->orderByDesc('eaten_on')
             ->orderByDesc('id');
 
