@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * Follows kit/plumbing/backend/bootstrap-app.snippet.php (Rakaya D1/D3), minus the
+ * Follows kit/plumbing/backend/bootstrap-app.snippet.php, minus the
  * tenancy middleware (this app is single-tenant — see references/adopting.md).
  */
 

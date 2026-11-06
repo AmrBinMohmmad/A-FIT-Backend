@@ -18,7 +18,7 @@ use ReflectionNamedType;
 use Tests\TestCase;
 
 /**
- * The executable half of the Rakaya standard — kit v4.0.0 (token-normalized core v2.0.0;
+ * The executable half of the project standard.
  * v4 added test_index_actions_are_paginated, test_public_routes_are_throttled, and
  * test_queued_jobs_pin_the_tenant). Decisions D1–D10 in
  * decisions.md; evasion fixes from the audit rounds.

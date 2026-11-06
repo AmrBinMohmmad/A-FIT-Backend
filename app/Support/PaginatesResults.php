@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * Follows kit/plumbing/backend/app/Support/PaginatesResults.php (Rakaya D10.2) verbatim.
+ * Follows kit/plumbing/backend/app/Support/PaginatesResults.php verbatim.
  */
 
 namespace App\Support;

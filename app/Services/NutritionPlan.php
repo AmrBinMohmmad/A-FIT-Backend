@@ -9,7 +9,7 @@ use App\Enums\Gender;
 use App\Enums\GoalType;
 
 /**
- * The authoritative daily-target calculation (Rakaya Tier 1.1). The mobile client
+ * The authoritative daily-target calculation. The mobile client
  * keeps a preview mirror of this exact arithmetic for the onboarding screen and
  * labels it "Mirrors app/Services/NutritionPlan.php"; the stored targets always
  * come from here.

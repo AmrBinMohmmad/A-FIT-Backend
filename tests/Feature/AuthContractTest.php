@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
- * Follows kit/enforcement/backend/tests/Feature/AuthContractTest.php (Rakaya D2), adapted
+ * Follows kit/enforcement/backend/tests/Feature/AuthContractTest.php, adapted
  * to the passwordless OTP flow: the plaintext PAT lives at exactly data.token.
  */
 final class AuthContractTest extends TestCase

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * Follows kit/plumbing/backend/app/Http/Middleware/SetLocaleFromAcceptLanguage.php (Rakaya D3).
+ * Follows kit/plumbing/backend/app/Http/Middleware/SetLocaleFromAcceptLanguage.php.
  */
 
 namespace App\Http\Middleware;

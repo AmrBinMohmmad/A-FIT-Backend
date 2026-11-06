@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Gate;
 
 /**
  * Membership is the visibility boundary: a non-member gets 404 on every group route
- * (never 403 — the group's existence is not disclosed, Rakaya D10.16).
+ * (never 403 — the group's existence is not disclosed, project D10.16).
  */
 class GroupController extends Controller
 {

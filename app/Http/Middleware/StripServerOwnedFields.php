@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Ownership (user_id, owner_id), membership role, invite codes and timestamps are
  * always derived from the authenticated user or generated server-side — a client
  * that sends them is either confused or hostile, and either way the key is dropped.
- * Mirrors the Rakaya kit's StripServerOwnedFields (D4.3) for a single-tenant app.
+ * Mirrors the kit's StripServerOwnedFields for a single-tenant app.
  */
 class StripServerOwnedFields
 {
