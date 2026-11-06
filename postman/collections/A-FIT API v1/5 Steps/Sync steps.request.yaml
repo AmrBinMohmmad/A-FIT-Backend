@@ -1,0 +1,24 @@
+$kind: http-request
+description: "Idempotent batch upsert of per-day totals (\u2264 31 rows, dates within the last 45 days). Throttled 12/min per user."
+url: '{{base_url}}/steps'
+method: PUT
+order: 1000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "entries": [
+        {
+          "date": "{{today}}",
+          "steps": 7482,
+          "source": "healthkit"
+        }
+      ]
+    }

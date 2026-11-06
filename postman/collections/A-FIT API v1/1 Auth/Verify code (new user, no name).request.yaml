@@ -1,0 +1,30 @@
+$kind: http-request
+description: "New e-mail without a name \u2192 200 with data.requires_name = true and no token; the code stays valid for the follow-up."
+url: '{{base_url}}/auth/otp/verify'
+method: POST
+order: 3000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "new@example.com",
+      "code": "{{code}}"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const body = pm.response.json();
+      pm.test("envelope has exactly flag, data, message", () => {
+        pm.expect(Object.keys(body)).to.eql(["flag", "data", "message"]);
+        pm.expect(body).to.not.have.property("errors");
+      });

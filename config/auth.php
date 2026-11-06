@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
 
 return [
@@ -20,7 +22,19 @@ return [
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
     ],
 
-    'master_otp' => env('MASTER_OTP', '234987'),
+    /*
+    |--------------------------------------------------------------------------
+    | Development master one-time code
+    |--------------------------------------------------------------------------
+    |
+    | A fixed 6-digit code accepted for ANY e-mail so testers can sign in without
+    | reading mail logs. App\Services\OtpCodes honours it ONLY when the application
+    | environment is local or testing — in production this value is ignored even
+    | if it is set. Leave it empty everywhere except developer machines.
+    |
+    */
+
+    'dev_master_otp' => env('DEV_MASTER_OTP'),
 
     /*
     |--------------------------------------------------------------------------

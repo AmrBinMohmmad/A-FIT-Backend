@@ -1,0 +1,13 @@
+$kind: http-request
+description: "Groups the caller belongs to (paginated)."
+url: '{{base_url}}/groups?per_page=50'
+method: GET
+order: 1000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+queryParams:
+  - key: per_page
+    value: '50'

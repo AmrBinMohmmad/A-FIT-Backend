@@ -1,0 +1,10 @@
+$kind: http-request
+description: "Owner only."
+url: '{{base_url}}/groups/{{group_id}}'
+method: DELETE
+order: 10000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

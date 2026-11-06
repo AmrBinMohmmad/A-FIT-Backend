@@ -1,0 +1,10 @@
+$kind: http-request
+description: "The group plus today's standings. Non-members get 404."
+url: '{{base_url}}/groups/{{group_id}}'
+method: GET
+order: 4000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

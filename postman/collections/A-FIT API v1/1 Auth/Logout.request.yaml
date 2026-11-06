@@ -1,0 +1,10 @@
+$kind: http-request
+description: "Revokes the current token."
+url: '{{base_url}}/auth/logout'
+method: POST
+order: 5000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

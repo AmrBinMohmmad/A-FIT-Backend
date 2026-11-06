@@ -1,0 +1,18 @@
+$kind: http-request
+description: "Code is case-insensitive; dashes are ignored. Unknown code \u2192 404, already a member \u2192 409, full \u2192 409."
+url: '{{base_url}}/groups/join'
+method: POST
+order: 3000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "code": "{{invite_code}}"
+    }

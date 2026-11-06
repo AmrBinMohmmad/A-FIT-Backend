@@ -1,0 +1,3 @@
+$kind: collection
+description: "Meals per local day (paginated), per-day totals, and frequently logged meals."
+order: 4000

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
 
     /*
@@ -80,7 +82,12 @@ return [
 
     'locale' => env('APP_LOCALE', 'ar'),
 
-    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'ar'),
+    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+
+    /*
+    | Locales SetLocaleFromAcceptLanguage may switch to (Rakaya D3). Keep in step with lang/.
+    */
+    'supported_locales' => ['ar', 'en'],
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 

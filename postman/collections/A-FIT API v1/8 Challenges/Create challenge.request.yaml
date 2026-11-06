@@ -1,0 +1,32 @@
+$kind: http-request
+description: "type most_steps (no goal) or target_steps (goal_steps \u2265 1000). starts_on today or later; ends_on \u2265 starts_on."
+url: '{{base_url}}/groups/{{group_id}}/challenges'
+method: POST
+order: 2000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "title": "تحدي ١٠٠ ألف خطوة",
+      "type": "target_steps",
+      "goal_steps": 100000,
+      "starts_on": "{{today}}",
+      "ends_on": "2026-11-05"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const body = pm.response.json();
+      pm.test("envelope has exactly flag, data, message", () => {
+        pm.expect(Object.keys(body)).to.eql(["flag", "data", "message"]);
+        pm.expect(body).to.not.have.property("errors");
+      });
+      if (body.data && body.data.id) pm.collectionVariables.set("challenge_id", String(body.data.id));

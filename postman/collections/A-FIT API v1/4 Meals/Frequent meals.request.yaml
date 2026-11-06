@@ -1,0 +1,10 @@
+$kind: http-request
+description: "Meals logged most often in the last 60 days (name + type), with their average macros; the client offers them as one-tap templates."
+url: '{{base_url}}/meals/frequent'
+method: GET
+order: 2500
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

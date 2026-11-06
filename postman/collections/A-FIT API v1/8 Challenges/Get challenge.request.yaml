@@ -1,0 +1,10 @@
+$kind: http-request
+description: "Includes standings over the challenge window and winner_user_id once ended."
+url: '{{base_url}}/challenges/{{challenge_id}}'
+method: GET
+order: 3000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

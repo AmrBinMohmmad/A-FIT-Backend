@@ -1,0 +1,10 @@
+$kind: http-request
+description: "Owner only; the owner cannot be removed (409)."
+url: '{{base_url}}/groups/{{group_id}}/members/2'
+method: DELETE
+order: 8000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

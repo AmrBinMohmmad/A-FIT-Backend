@@ -1,34 +1,68 @@
+# A-FIT API — production-shaped compose: nginx → php-fpm app, a queue worker for OTP
+# mail, the scheduler, MySQL and Redis (cache = OTP store + rate limiters + leaderboard
+# cache; queue = mail). Every app-side container shares the same image and .env.
 services:
   app:
     image: ${DOCKER_IMAGE:-amromohmmad/a_fit_backend:latest}
-    container_name: a_fit_backend_app
+    build: .
+    container_name: a_fit_app
     restart: unless-stopped
-    env_file:
-      - .env
+    env_file: .env
     volumes:
-      - ./:/var/www  
+      - app_storage:/var/www/storage
     depends_on:
       db:
         condition: service_healthy
-    networks:
-      - afit_network
+      redis:
+        condition: service_healthy
+    networks: [afit]
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'exit(0);'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  queue:
+    image: ${DOCKER_IMAGE:-amromohmmad/a_fit_backend:latest}
+    container_name: a_fit_queue
+    restart: unless-stopped
+    env_file: .env
+    command: php artisan queue:work redis --sleep=2 --tries=3 --max-time=3600 --max-jobs=1000
+    volumes:
+      - app_storage:/var/www/storage
+    depends_on:
+      app:
+        condition: service_started
+    networks: [afit]
+
+  scheduler:
+    image: ${DOCKER_IMAGE:-amromohmmad/a_fit_backend:latest}
+    container_name: a_fit_scheduler
+    restart: unless-stopped
+    env_file: .env
+    command: php artisan schedule:work
+    volumes:
+      - app_storage:/var/www/storage
+    depends_on:
+      app:
+        condition: service_started
+    networks: [afit]
 
   nginx:
-    image: nginx:alpine
+    image: nginx:1.27-alpine
     container_name: a_fit_nginx
     restart: unless-stopped
     ports:
       - "${APP_PORT:-8000}:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./:/var/www:ro
+      - ./public:/var/www/public:ro
     depends_on:
       - app
-    networks:
-      - afit_network
+    networks: [afit]
 
   db:
-    image: mysql:8.0
+    image: mysql:8.4
     container_name: a_fit_db
     restart: unless-stopped
     environment:
@@ -36,22 +70,32 @@ services:
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-    ports:
-      - "${DB_FORWARD_PORT:-3306}:3306"
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --innodb-buffer-pool-size=512M
     volumes:
       - db_data:/var/lib/mysql
-    networks:
-      - afit_network
+    networks: [afit]
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    container_name: a_fit_redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save ""
+    networks: [afit]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
 networks:
-  afit_network:
+  afit:
     driver: bridge
 
 volumes:
   db_data:
-    driver: local
+  app_storage:

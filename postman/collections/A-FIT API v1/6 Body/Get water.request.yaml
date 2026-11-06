@@ -1,0 +1,10 @@
+$kind: http-request
+description: "Absolute ml for the day (0 when none)."
+url: '{{base_url}}/water/{{today}}'
+method: GET
+order: 1000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

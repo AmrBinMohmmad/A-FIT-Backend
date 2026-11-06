@@ -1,211 +1,129 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Enums\OtpResult;
+use App\Http\Requests\RequestOtpRequest;
+use App\Http\Requests\SignedInRequest;
+use App\Http\Requests\VerifyOtpRequest;
+use App\Http\Resources\UserResource;
+use App\Mail\OtpCodeMail;
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
+use App\Services\OtpCodes;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\VerifyEmailCode;
-use App\Mail\VerifyLogin;
+use Laravel\Sanctum\PersonalAccessToken;
 
+/**
+ * Passwordless sign-in: one "continue with e-mail" flow.
+ *
+ *   POST auth/otp/request {email}            → always the same 200, whether or not the
+ *                                              address has an account (no enumeration).
+ *   POST auth/otp/verify  {email, code, name?} → existing user: token. New e-mail without a
+ *                                              name: 200 + requires_name so the client asks
+ *                                              for it. New e-mail with a name: account + token.
+ */
 class AuthController extends Controller
 {
-    private function getMasterOtp(): ?string
+    /**
+     * Live sessions per account. Signing in on an eleventh device silently revokes the
+     * oldest token, so a lost phone's token cannot outlive ten later sign-ins and the
+     * token table stays bounded per user.
+     */
+    public const MAX_SESSIONS = 10;
+
+    public function requestCode(RequestOtpRequest $request, OtpCodes $codes): JsonResponse
     {
-        return config('auth.master_otp') ? (string) config('auth.master_otp') : env('MASTER_OTP');
-    }
+        /** @var string $email */
+        $email = $request->validated('email');
 
-    
-    public function register(Request $request)
-    {
-        $validated = $request->validate([
-            'name'  => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-        ], [
-            'name.required'  => 'حقل الاسم مطلوب',
-            'name.max'       => 'الاسم يجب ألا يتجاوز 255 حرفاً',
-            'email.required' => 'حقل البريد الإلكتروني مطلوب',
-            'email.email'    => 'يرجى إدخال بريد إلكتروني صالح',
-            'email.unique'   => 'البريد الإلكتروني مسجل مسبقاً',
-        ]);
+        $code = $codes->issue($email);
 
-        $code = (string) random_int(100000, 999999);
-
-        Cache::put("register_pending_{$validated['email']}", [
-            'name'  => $validated['name'],
-            'email' => $validated['email'],
-            'code'  => $code,
-        ], now()->addMinutes(10));
-
-        Mail::to($validated['email'])->send(new VerifyEmailCode($code, $validated['name']));
-
-        return response()->json([
-            'message' => 'تم إرسال رمز التحقق إلى بريدك الإلكتروني',
-            'email'   => $validated['email'],
-        ], 200);
-    }
-
-
-    public function verifyRegister(Request $request)
-    {
-        $validated = $request->validate([
-            'email' => ['required', 'string', 'email', 'max:255'],
-            'code'  => ['required', 'string', 'size:6'],
-        ], [
-            'email.required' => 'حقل البريد الإلكتروني مطلوب',
-            'email.email'    => 'يرجى إدخال بريد إلكتروني صالح',
-            'code.required'  => 'رمز التحقق مطلوب',
-            'code.size'      => 'رمز التحقق يجب أن يتكون من 6 أرقام',
-        ]);
-
-        if (User::where('email', $validated['email'])->exists()) {
-            return response()->json([
-                'message' => 'هذا الحساب مسجل ومفعل مسبقاً، يمكنك تسجيل الدخول مباشرة',
-            ], 400);
+        if ($code === null) {
+            return $this->error(__('errors.otp_cooldown'), 429);
         }
 
-        $cachedData = Cache::get("register_pending_{$validated['email']}");
-        $masterOtp = $this->getMasterOtp();
-        $isMasterOtp = ($masterOtp && $validated['code'] === $masterOtp);
+        Mail::to($email)->locale(app()->getLocale())->queue(new OtpCodeMail($code));
 
-        if (!$isMasterOtp && (!$cachedData || $cachedData['code'] !== $validated['code'])) {
-            return response()->json([
-                'message' => 'رمز التحقق غير صحيح أو منتهي الصلاحية',
-            ], 422);
-        }
-
-        $name = $cachedData['name'] ?? ($request->name ?? 'مستخدم أي-فت');
-
-        $user = User::create([
-            'name'              => $name,
-            'email'             => $validated['email'],
-            'email_verified_at' => now(),
-        ]);
-
-        Cache::forget("register_pending_{$validated['email']}");
-
-        $token = $user->createToken('api-token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'تم تأكيد البريد وإنشاء الحساب بنجاح',
-            'user'    => $user,
-            'token'   => $token,
-        ], 201);
+        return $this->success(null, __('messages.otp_sent'));
     }
 
-
-    public function resendRegisterCode(Request $request)
+    public function verify(VerifyOtpRequest $request, OtpCodes $codes): JsonResponse
     {
-        $validated = $request->validate([
-            'email' => ['required', 'string', 'email', 'max:255'],
-        ], [
-            'email.required' => 'حقل البريد الإلكتروني مطلوب',
-            'email.email'    => 'يرجى إدخال بريد إلكتروني صالح',
-        ]);
+        /** @var string $email */
+        $email = $request->validated('email');
+        /** @var string $code */
+        $code = $request->validated('code');
+        $name = $request->validated('name');
 
-        if (User::where('email', $validated['email'])->exists()) {
-            return response()->json([
-                'message' => 'هذا البريد مسجل بالفعل',
-            ], 400);
+        $result = $codes->verify($email, $code);
+
+        if ($result === OtpResult::Locked) {
+            return $this->error(__('errors.otp_locked'), 429);
         }
 
-        $cachedData = Cache::get("register_pending_{$validated['email']}");
-        if (!$cachedData) {
-            return response()->json([
-                'message' => 'انتهت صلاحية طلب التسجيل، يرجى إعادة إدخال بياناتك مجدداً',
-            ], 404);
+        if ($result === OtpResult::Invalid) {
+            return $this->error(__('errors.otp_invalid'), 400);
         }
 
-        $code = (string) random_int(100000, 999999);
-        $cachedData['code'] = $code;
-        Cache::put("register_pending_{$validated['email']}", $cachedData, now()->addMinutes(10));
+        $user = User::query()->where('email', $email)->first();
+        $isNew = false;
 
-        Mail::to($validated['email'])->send(new VerifyEmailCode($code, $cachedData['name']));
+        if ($user === null) {
+            if (! is_string($name) || trim($name) === '') {
+                // The code stays valid so the follow-up call (with the name) can finish.
+                return $this->success([
+                    'requires_name' => true,
+                    'token' => null,
+                    'user' => null,
+                    'is_new' => true,
+                ], __('messages.otp_name_needed'));
+            }
 
-        return response()->json([
-            'message' => 'تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني',
-        ], 200);
-    }
-
-    public function login(Request $request)
-    {
-        $request->merge([
-            'email' => strtolower(trim((string) $request->input('email'))),
-        ]);
-
-        $validated = $request->validate([
-            'email' => ['required', 'string', 'email', 'max:255', 'exists:users,email'],
-        ], [
-            'email.required' => 'حقل البريد الإلكتروني مطلوب',
-            'email.email'    => 'يرجى إدخال بريد إلكتروني صالح',
-            'email.exists'   => 'البريد الإلكتروني غير مسجل لدينا',
-        ]);
-
-        $user = User::where('email', $validated['email'])->first();
-        $code = (string) random_int(100000, 999999);
-
-        // Keep OTP active for 10 minutes (prevents premature 90-second expiration)
-        Cache::put("login_verify_{$user->id}", $code, now()->addMinutes(10));
-
-        Mail::to($user->email)->send(new VerifyLogin($code, $user->name));
-
-        return response()->json([
-            'message' => 'تم إرسال رمز الدخول إلى بريدك الإلكتروني',
-        ], 200);
-    }
-
-
-    public function verifyLogin(Request $request)
-    {
-        $request->merge([
-            'email' => strtolower(trim((string) $request->input('email'))),
-        ]);
-
-        $validated = $request->validate([
-            'email' => ['required', 'string', 'email', 'max:255', 'exists:users,email'],
-            'code'  => ['required', 'string', 'size:6'],
-        ], [
-            'email.required' => 'حقل البريد الإلكتروني مطلوب',
-            'email.exists'   => 'البريد الإلكتروني غير مسجل لدينا',
-            'code.required'  => 'رمز التحقق مطلوب',
-            'code.size'      => 'رمز التحقق يجب أن يتكون من 6 أرقام',
-        ]);
-
-        $user = User::where('email', $validated['email'])->first();
-        $cachedCode = Cache::get("login_verify_{$user->id}");
-        $masterOtp = $this->getMasterOtp();
-        $isMasterOtp = ($masterOtp && $validated['code'] === $masterOtp);
-
-        if (!$isMasterOtp && (!$cachedCode || $cachedCode !== $validated['code'])) {
-            return response()->json([
-                'message' => 'رمز الدخول غير صحيح أو منتهي الصلاحية، حاول مرة أخرى',
-            ], 400);
-        }
-
-        Cache::forget("login_verify_{$user->id}");
-
-        // Automatically ensure email_verified_at is set since user verified via email OTP
-        if (is_null($user->email_verified_at)) {
+            $user = User::query()->create([
+                'name' => trim($name),
+                'email' => $email,
+                'locale' => app()->getLocale(),
+            ]);
             $user->forceFill(['email_verified_at' => now()])->save();
+            $isNew = true;
         }
 
-        $user->tokens()->delete();
-        $token = $user->createToken('api-token')->plainTextToken;
+        $codes->consume($email);
 
-        return response()->json([
-            'message' => 'تم تسجيل الدخول بنجاح',
-            'user'    => $user->fresh(),
-            'token'   => $token,
-        ], 200);
+        $keep = $user->tokens()->latest('id')->take(self::MAX_SESSIONS - 1)->pluck('id');
+        $user->tokens()->whereNotIn('id', $keep)->delete();
+
+        $deviceName = (string) ($request->validated('device_name') ?? 'mobile');
+        $token = $user->createToken(mb_substr($deviceName, 0, 80))->plainTextToken;
+
+        $user->load('profile');
+
+        return $this->success([
+            'requires_name' => false,
+            'token' => $token,
+            'user' => new UserResource($user),
+            'is_new' => $isNew,
+        ], $isNew ? __('messages.account_created') : __('messages.signed_in'));
     }
 
-    public function logout(Request $request)
+    public function logout(SignedInRequest $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $token = $request->actor()->currentAccessToken();
+        if ($token instanceof PersonalAccessToken) {
+            $token->delete();
+        }
 
-        return response()->json([
-            'message' => 'تم تسجيل الخروج بنجاح',
-        ], 200);
+        return $this->success(null, __('messages.signed_out'));
+    }
+
+    /** Revokes every token of the account — "sign out of all devices" after a lost phone. */
+    public function logoutAll(SignedInRequest $request): JsonResponse
+    {
+        $request->actor()->tokens()->delete();
+
+        return $this->success(null, __('messages.signed_out_everywhere'));
     }
 }

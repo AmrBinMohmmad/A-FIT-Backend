@@ -1,0 +1,33 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+    'ok' => 'Done.',
+    'created' => 'Created successfully.',
+    'deleted' => 'Deleted successfully.',
+    'otp_sent' => 'If this e-mail is valid, a 6-digit code is on its way.',
+    'otp_name_needed' => 'Code confirmed. One more step: your name.',
+    'signed_in' => 'Welcome back.',
+    'account_created' => 'Your account is ready.',
+    'signed_out' => 'You have been signed out.',
+    'signed_out_everywhere' => 'You have been signed out on every device.',
+    'account_deleted' => 'Your account and all its data have been deleted.',
+    'profile_saved' => 'Your plan is saved.',
+    'meal_created' => 'Meal logged.',
+    'meal_updated' => 'Meal updated.',
+    'meal_deleted' => 'Meal removed.',
+    'steps_synced' => 'Steps synced.',
+    'water_saved' => 'Water intake saved.',
+    'weight_saved' => 'Weight saved.',
+    'weight_deleted' => 'Weight entry removed.',
+    'group_created' => 'Group created. Share the invite code with your friends.',
+    'group_updated' => 'Group updated.',
+    'group_deleted' => 'Group deleted.',
+    'group_joined' => 'You joined the group.',
+    'group_left' => 'You left the group.',
+    'member_removed' => 'Member removed.',
+    'code_rotated' => 'A new invite code was generated.',
+    'challenge_created' => 'Challenge created.',
+    'challenge_deleted' => 'Challenge deleted.',
+];
