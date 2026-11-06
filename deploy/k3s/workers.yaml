@@ -1,0 +1,48 @@
+# The queue worker (OTP mail) and the scheduler (token pruning), same image and env as the API.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: queue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: queue
+  template:
+    metadata:
+      labels:
+        app: queue
+    spec:
+      containers:
+        - name: app
+          image: amromohmmad/a_fit_backend
+          command: ["php", "artisan", "queue:work", "redis", "--sleep=2", "--tries=3", "--max-time=3600", "--max-jobs=1000"]
+          envFrom:
+            - secretRef: { name: a-fit-env }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 256Mi }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scheduler
+  template:
+    metadata:
+      labels:
+        app: scheduler
+    spec:
+      containers:
+        - name: app
+          image: amromohmmad/a_fit_backend
+          command: ["php", "artisan", "schedule:work"]
+          envFrom:
+            - secretRef: { name: a-fit-env }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 256Mi }

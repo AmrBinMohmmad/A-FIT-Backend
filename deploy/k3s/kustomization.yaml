@@ -1,0 +1,31 @@
+# A-FIT API on k3s — one EC2 node is enough to start (see README "Deploy on AWS EC2 + k3s").
+#
+#   kubectl apply -k deploy/k3s
+#
+# Release a new image: change `newTag` below (the automatic MAJOR.MINOR tag from CI) and apply
+# again, or `kubectl -n a-fit set image deployment/api,deployment/queue,deployment/scheduler \
+#   app=amromohmmad/a_fit_backend:<tag> migrate=... public=...` — editing this file is simpler.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: a-fit
+
+resources:
+  - namespace.yaml
+  - cluster-issuer.yaml
+  - mysql.yaml
+  - redis.yaml
+  - api.yaml
+  - workers.yaml
+  - ingress.yaml
+
+images:
+  - name: amromohmmad/a_fit_backend
+    newTag: latest
+
+configMapGenerator:
+  # Same file as nginx/default.conf (a unit test keeps them identical); `app` resolves to
+  # 127.0.0.1 inside the pod through hostAliases, so fastcgi_pass app:9000 needs no change.
+  - name: nginx-conf
+    files:
+      - default.conf=nginx.conf
