@@ -80,12 +80,16 @@ final class FoodTest extends TestCase
 
         // Label printed per serving (1 slice = 30 g, 80 kcal) is stored per 100 g.
         $created = $this->postJson('/api/v1/foods', [
-            'name' => 'Toast, brand X, large', 'brand' => 'Brand X', 'category' => 'bread', 'generic_id' => $toast->id,
+            'name' => 'Toast, brand X, large', 'brand' => 'Brand X', 'barcode' => '6281000000999', 'category' => 'bread', 'generic_id' => $toast->id,
             'serving_grams' => 30, 'serving_label' => '1 slice', 'per' => 'serving',
             'calories' => 80, 'protein' => 2.5, 'carbs' => 15, 'fat' => 1,
             'user_id' => 999,
         ]);
-        $created->assertCreated()->assertJsonPath('data.is_mine', true)->assertJsonPath('data.source', 'user');
+        $created->assertCreated()->assertJsonPath('data.is_mine', true)->assertJsonPath('data.source', 'user')
+            ->assertJsonPath('data.barcode', '6281000000999');
+        // A scanned code finds my own food, and a malformed one is refused.
+        $this->getJson('/api/v1/foods?q=6281000000999')->assertOk()->assertJsonPath('data.data.0.name', 'Toast, brand X, large');
+        $this->postJson('/api/v1/foods', ['name' => 'Bad', 'category' => 'other', 'serving_grams' => 10, 'per' => '100g', 'calories' => 1, 'protein' => 0, 'carbs' => 0, 'fat' => 0, 'barcode' => 'abc'])->assertUnprocessable();
         $this->assertEqualsWithDelta(266.7, $created->json('data.per_100g.calories'), 0.01);
         $this->assertSame(80, $created->json('data.per_serving.calories'));
         $id = (int) $created->json('data.id');

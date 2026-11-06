@@ -16,6 +16,7 @@ body:
     {
       "name": "Toast, brand X",
       "brand": "Brand X",
+      "barcode": "6281000000999",
       "category": "bread",
       "generic_id": 10,
       "serving_grams": 30,

@@ -92,7 +92,7 @@ final class FoodCatalog
      * A private food from a package label. Labels print nutrition per serving or per 100 g;
      * both are accepted and stored per 100 g.
      *
-     * @param  array{name: string, name_ar?: ?string, brand?: ?string, category: string, generic_id?: ?int, serving_grams: float|int, serving_label?: ?string, serving_label_ar?: ?string, per: string, calories: float|int, protein: float|int, carbs: float|int, fat: float|int}  $data
+     * @param  array{name: string, name_ar?: ?string, brand?: ?string, barcode?: ?string, category: string, generic_id?: ?int, serving_grams: float|int, serving_label?: ?string, serving_label_ar?: ?string, per: string, calories: float|int, protein: float|int, carbs: float|int, fat: float|int}  $data
      */
     public function createCustom(User $user, array $data): Food
     {
@@ -104,6 +104,7 @@ final class FoodCatalog
             'name' => trim($data['name']),
             'name_ar' => isset($data['name_ar']) ? trim((string) $data['name_ar']) : null,
             'brand' => isset($data['brand']) ? trim((string) $data['brand']) : null,
+            'barcode' => isset($data['barcode']) && $data['barcode'] !== '' ? (string) $data['barcode'] : null,
             'serving_grams' => (float) $data['serving_grams'],
             'serving_label' => $data['serving_label'] ?? null,
             'serving_label_ar' => $data['serving_label_ar'] ?? null,

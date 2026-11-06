@@ -55,7 +55,7 @@ class FoodController extends Controller
 
     public function store(StoreFoodRequest $request, FoodCatalog $catalog): JsonResponse
     {
-        /** @var array{name: string, name_ar?: ?string, brand?: ?string, category: string, generic_id?: ?int, serving_grams: float|int, serving_label?: ?string, serving_label_ar?: ?string, per: string, calories: float|int, protein: float|int, carbs: float|int, fat: float|int} $data */
+        /** @var array{name: string, name_ar?: ?string, brand?: ?string, barcode?: ?string, category: string, generic_id?: ?int, serving_grams: float|int, serving_label?: ?string, serving_label_ar?: ?string, per: string, calories: float|int, protein: float|int, carbs: float|int, fat: float|int} $data */
         $data = $request->validated();
         $food = $catalog->createCustom($request->actor(), $data);
 

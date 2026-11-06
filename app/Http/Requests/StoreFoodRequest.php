@@ -18,6 +18,8 @@ class StoreFoodRequest extends AuthenticatedRequest
             'name' => ['required', 'string', 'min:2', 'max:120'],
             'name_ar' => ['nullable', 'string', 'min:2', 'max:120'],
             'brand' => ['nullable', 'string', 'max:80'],
+            // EAN-8/EAN-13/UPC as scanned; digits only, so search can match it exactly.
+            'barcode' => ['nullable', 'string', 'regex:/^\d{8,14}$/'],
             'category' => ['required', Rule::enum(FoodCategory::class)],
             // Only a generic (top-level) item the user can see may be the parent.
             'generic_id' => ['nullable', 'integer', Rule::exists('foods', 'id')
