@@ -68,8 +68,8 @@ Manifests: `deploy/k3s` (kustomize). One node runs everything: nginx + php-fpm i
 queue worker, the scheduler, MySQL on local disk, Redis, Traefik ingress with Let's Encrypt.
 
 1. **EC2**: Ubuntu 24.04, `t3.small` or larger (2 GB RAM minimum), 20 GB disk, an Elastic IP.
-   Security group inbound: 22 from your IP, 80 and 443 from anywhere. DNS: an `A` record
-   `api.<your-domain>` → the Elastic IP.
+   Security group inbound: 22 from your IP, 80 and 443 from anywhere. DNS: the DuckDNS name
+   `a-fitness.duckdns.org` must point at the Elastic IP (update it on duckdns.org after launch).
 2. **k3s + cert-manager** (on the server):
    ```bash
    curl -sfL https://get.k3s.io | sh -
@@ -82,7 +82,6 @@ queue worker, the scheduler, MySQL on local disk, Redis, Traefik ingress with Le
    git clone https://github.com/AmrBinMohmmad/A-FIT-Backend.git && cd A-FIT-Backend
    cp deploy/k3s/env.example .env.production      # fill APP_URL, DB/MySQL passwords, MAIL_*
    sed -i "s|^APP_KEY=.*|APP_KEY=base64:$(openssl rand -base64 32)|" .env.production
-   sed -i 's/api.example.com/api.<your-domain>/' deploy/k3s/ingress.yaml
    sed -i 's/admin@example.com/<your e-mail>/'   deploy/k3s/cluster-issuer.yaml
    ```
    Set `newTag` in `deploy/k3s/kustomization.yaml` to a tag CI pushed to Docker Hub.
@@ -92,14 +91,14 @@ queue worker, the scheduler, MySQL on local disk, Redis, Traefik ingress with Le
    kubectl -n a-fit create secret generic a-fit-env --from-env-file=.env.production
    kubectl apply -k deploy/k3s
    kubectl -n a-fit get pods -w            # api becomes 2/2 once migrations ran
-   curl -i https://api.<your-domain>/up    # 200 once the certificate is issued (~1 min)
+   curl -i https://a-fitness.duckdns.org/up    # 200 once the certificate is issued (~1 min)
    ```
 5. **Release**: after a merge to `main` produced a new tag, change `newTag` and
    `kubectl apply -k deploy/k3s` — the rolling update migrates, then switches traffic.
 6. **Operate**: logs `kubectl -n a-fit logs deploy/api -c app`; a shell
    `kubectl -n a-fit exec -it deploy/api -c app -- sh`; a DB dump
    `kubectl -n a-fit exec mysql-0 -- sh -c 'mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" a_fit' > backup.sql`.
-   Point the mobile app's `EXPO_PUBLIC_API_URL` at `https://api.<your-domain>/api/v1`.
+   Point the mobile app's `EXPO_PUBLIC_API_URL` at `https://a-fitness.duckdns.org/api/v1`.
 
 When one server is not enough: move the database to RDS (set `DB_HOST`, drop `mysql.yaml`
 from the kustomization) and raise `replicas` on `api`.

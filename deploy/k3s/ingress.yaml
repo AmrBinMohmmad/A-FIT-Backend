@@ -8,10 +8,10 @@ metadata:
 spec:
   ingressClassName: traefik
   tls:
-    - hosts: [api.example.com]
+    - hosts: [a-fitness.duckdns.org]
       secretName: api-tls
   rules:
-    - host: api.example.com
+    - host: a-fitness.duckdns.org
       http:
         paths:
           - path: /
