@@ -1,9 +1,10 @@
 # Backend quality gate + delivery.
 #
 #   push/PR to dev, main ........ quality (EXACTLY the members of `composer check`)
-#   push to dev ................. image  amromohmmad/a_fit_backend:dev + :sha-<short>
-#   push to main ................ automatic tag (latest MAJOR.MINOR + 1, starting at 0.1),
-#                                 image :<tag> + :latest + :sha-<short>, GitHub release
+#   push to dev ................. docker build → tag :dev + :sha-<short> → push to Docker Hub
+#   push to main ................ automatic git tag (latest MAJOR.MINOR + 1, starting at 0.1),
+#                                 docker build → tag :<tag> + :latest + :sha-<short> → push,
+#                                 GitHub release
 #
 # Secrets required on the repository: DOCKERHUB_USERNAME, DOCKERHUB_TOKEN (a Docker Hub
 # access token). Without them the image job skips. Every delivery job `needs: quality`.
@@ -31,7 +32,11 @@ jobs:
       - id: secrets
         env:
           HAS_DOCKERHUB: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
-        run: echo "dockerhub=$HAS_DOCKERHUB" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "dockerhub=$HAS_DOCKERHUB" >> "$GITHUB_OUTPUT"
+          if [ "$HAS_DOCKERHUB" != "true" ]; then
+            echo "::warning title=No image will be pushed::Add the repository secrets DOCKERHUB_USERNAME and DOCKERHUB_TOKEN to build and push amromohmmad/a_fit_backend."
+          fi
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -105,39 +110,34 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      # main → the automatic tag (e.g. 0.3); dev → "dev"
+      TAG: ${{ needs.tag.outputs.tag || 'dev' }}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      - uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build the image
+        run: docker build --pull -t "$IMAGE:$TAG" -t "$IMAGE:sha-${GITHUB_SHA::7}" .
 
-      - id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.IMAGE }}
-          # dev → :dev · main → :<tag> :latest · always :sha-<short>
-          tags: |
-            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=${{ needs.tag.outputs.tag }},enable=${{ github.ref == 'refs/heads/main' }}
-            type=sha,prefix=sha-
-          labels: |
-            org.opencontainers.image.title=A-FIT API
-            org.opencontainers.image.version=${{ needs.tag.outputs.tag }}
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+      - name: Tag latest (main only)
+        if: github.ref == 'refs/heads/main'
+        run: docker tag "$IMAGE:$TAG" "$IMAGE:latest"
 
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Push every tag of the image
+        run: docker push --all-tags "$IMAGE"
+
+      - name: Summary
+        run: |
+          {
+            echo "### Image pushed"
+            echo
+            echo "- \`$IMAGE:$TAG\`"
+            echo "- \`$IMAGE:sha-${GITHUB_SHA::7}\`"
+            [ "$GITHUB_REF" = "refs/heads/main" ] && echo "- \`$IMAGE:latest\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   release:
     needs: [tag, image]
