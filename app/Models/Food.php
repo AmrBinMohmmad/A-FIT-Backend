@@ -33,6 +33,7 @@ class Food extends Model
         'name_ar',
         'brand',
         'barcode',
+        'image_url',
         'serving_grams',
         'serving_label',
         'serving_label_ar',

@@ -28,6 +28,7 @@ class FoodResource extends JsonResource
             'category' => $this->category->value,
             'source' => $this->source->value,
             'barcode' => $this->barcode,
+            'image_url' => $this->image_url,
             'generic_id' => $this->generic_id,
             'variants_count' => (int) ($this->variants_count ?? 0),
             'serving_grams' => $this->serving_grams,

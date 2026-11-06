@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ImportFoodRequest;
+use App\Http\Requests\LookupFoodsRequest;
 use App\Http\Requests\SearchFoodsRequest;
 use App\Http\Requests\SignedInRequest;
 use App\Http\Requests\StoreFoodRequest;
 use App\Http\Resources\FoodResource;
+use App\Http\Resources\LookupResultResource;
 use App\Models\Food;
 use App\Services\FoodCatalog;
+use App\Services\OpenFoodFacts;
 use App\Support\PaginatesResults;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -51,6 +55,58 @@ class FoodController extends Controller
             'food' => new FoodResource($food),
             'variants' => FoodResource::collection($variants),
         ]);
+    }
+
+    /** Online products (Open Food Facts) matching a name — opt-in, cached a day per query. */
+    public function lookup(LookupFoodsRequest $request, OpenFoodFacts $off): JsonResponse
+    {
+        $found = $off->search((string) $request->validated('q'));
+
+        return $this->success([
+            'available' => $found['available'],
+            'results' => LookupResultResource::collection($this->withCatalogIds($found['products'])),
+        ]);
+    }
+
+    /** One online product by barcode — for a scan the catalog does not know. */
+    public function lookupBarcode(SignedInRequest $request, string $barcode, OpenFoodFacts $off): JsonResponse
+    {
+        abort_unless(preg_match('/^\d{8,14}$/', $barcode) === 1, 404, __('errors.product_not_found'));
+        $found = $off->product($barcode);
+
+        return $this->success([
+            'available' => $found['available'],
+            'result' => $found['product'] === null ? null : new LookupResultResource($this->withCatalogIds([$found['product']])[0]),
+        ]);
+    }
+
+    /** Files an online product in the shared catalog (idempotent) so it can be logged and rescanned. */
+    public function import(ImportFoodRequest $request, OpenFoodFacts $off): JsonResponse
+    {
+        $existing = Food::query()->whereNull('user_id')->where('barcode', $request->barcode())->first();
+        if ($existing !== null) {
+            return $this->success(new FoodResource($existing));
+        }
+
+        $found = $off->product($request->barcode());
+        abort_if($found['product'] === null, $found['available'] ? 404 : 503, $found['available'] ? __('errors.product_not_found') : __('errors.online_catalog_down'));
+
+        return $this->created(new FoodResource($off->store($found['product'])), __('messages.food_imported'));
+    }
+
+    /**
+     * Marks candidates already in the shared catalog with their id (one query for the page).
+     *
+     * @param  list<array<string, mixed>>  $products
+     * @return list<array<string, mixed>>
+     */
+    private function withCatalogIds(array $products): array
+    {
+        $ids = Food::query()->whereNull('user_id')
+            ->whereIn('barcode', array_column($products, 'barcode'))
+            ->pluck('id', 'barcode');
+
+        return array_map(fn (array $p) => $p + ['food_id' => $ids->get($p['barcode'])], $products);
     }
 
     public function store(StoreFoodRequest $request, FoodCatalog $catalog): JsonResponse

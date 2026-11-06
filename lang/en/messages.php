@@ -19,6 +19,7 @@ return [
     'meal_deleted' => 'Meal removed.',
     'food_created' => 'Food saved to your list.',
     'food_deleted' => 'Food removed.',
+    'food_imported' => 'Product added to the catalog.',
     'steps_synced' => 'Steps synced.',
     'water_saved' => 'Water intake saved.',
     'weight_saved' => 'Weight saved.',
