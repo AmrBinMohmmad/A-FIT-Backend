@@ -29,8 +29,8 @@ testing you may set `DEV_MASTER_OTP=000000`: that code then signs in any e-mail,
   and ships a release (`.github/workflows/backend.yml`).
 - `dev` — integration branch and the GitHub default. Feature branches (`feat/...`, `fix/...`)
   branch from `dev` and come back through a pull request; the quality gate must be green.
-- Nothing is pushed straight to `main`; `dev` accepts direct pushes only for small fixes
-  from the owner. Commits carry the author's own identity, no generated attribution.
+- Nothing is pushed straight to `main` or `dev`: every change is a branch and a pull request.
+  Commits carry the author's own identity, no generated attribution.
 
 ## Quality gate
 
