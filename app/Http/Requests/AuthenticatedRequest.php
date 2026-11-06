@@ -9,7 +9,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * Base for every request behind auth:sanctum: authorization is "a user is signed in"
- * (never a bare `return true`, Rakaya D10.4); resource-level checks live in Policies
+ * (never a bare `return true`, project D10.4); resource-level checks live in Policies
  * and are invoked by the controller.
  */
 abstract class AuthenticatedRequest extends FormRequest

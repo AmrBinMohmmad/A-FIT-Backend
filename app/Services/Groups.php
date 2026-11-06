@@ -15,7 +15,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Group membership rules in one place: creation, joining by code, leaving, removal and
- * code rotation. State-machine conflicts answer 409 (Rakaya D10.2); an unknown code is
+ * code rotation. State-machine conflicts answer 409; an unknown code is
  * a 404 so a guesser learns nothing beyond "no".
  */
 final class Groups

@@ -4,7 +4,7 @@ Laravel 13 JSON API behind the A-FIT mobile app (Expo). Passwordless e-mail OTP 
 meals and nutrition targets, background step totals from HealthKit / Health Connect,
 water and weight logs, friend groups with invite codes, step leaderboards and challenges.
 
-Built under the Rakaya standard (see `CLAUDE.md`): strict `{flag, data, message}` envelope,
+Built to the project standard (see `CLAUDE.md`): strict `{flag, data, message}` envelope,
 Sanctum bearer tokens, every route policy-checked, en/ar messages via `Accept-Language`,
 and an architecture test that fails the build on hand-rolled responses, unthrottled public
 routes, raw DB access in controllers, missing strict types and more.
@@ -23,6 +23,15 @@ With `MAIL_MAILER=log` the OTP code is written to `storage/logs/laravel.log`. Fo
 testing you may set `DEV_MASTER_OTP=000000`: that code then signs in any e-mail, but only while
 `APP_ENV` is `local` or `testing`; the API ignores the variable in every other environment.
 
+## Branching
+
+- `main` — what is deployed. Only fast-forward merges from `dev` via a pull request; the
+  Docker image is built from `main` only (`.github/workflows/backend.yml`).
+- `dev` — integration branch and the GitHub default. Feature branches (`feat/...`, `fix/...`)
+  branch from `dev` and come back through a pull request; the quality gate must be green.
+- Nothing is pushed straight to `main`; `dev` accepts direct pushes only for small fixes
+  from the owner. Commits carry the author's own identity, no generated attribution.
+
 ## Quality gate
 
 ```bash
@@ -39,6 +48,20 @@ mail), the scheduler (token pruning), MySQL 8.4 and Redis. Set every value in
 `.env.example`; TLS terminates in front of nginx. Redis is required in production: the OTP
 store, the rate limiters and the leaderboard cache live in it and must be shared by the app
 and queue containers.
+
+## Releases
+
+```bash
+git checkout main && git pull
+git tag v1.2.0 && git push origin v1.2.0
+```
+
+CI (`.github/workflows/backend.yml`) runs the quality gate on every push and pull request to
+`main` and `dev`, pushes the image `amromohmmad/a_fit_backend` to Docker Hub (`:dev` from `dev`,
+`:latest` from `main`, `:X.Y.Z` + `:X.Y` + `:latest` from a tag, always `:sha-<short>`), and a
+tag also publishes a GitHub release with generated notes. Repository secrets needed:
+`DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (a Docker Hub access token). Deploy by setting
+`DOCKER_IMAGE=amromohmmad/a_fit_backend:X.Y.Z` in the server's `.env` and `docker compose up -d`.
 
 ## Postman
 

@@ -1,4 +1,4 @@
-## rakaya-standard
+## project-standard
 
 - **Platform**: mobile + backend (this repo is the Laravel API; the Expo client is `../A-FIT`)
 - **Tier**: 1 — single developer, single-tenant (trigger wording: skill `references/adopting.md`)

@@ -1,4 +1,4 @@
-# Rakaya kit v4.3.0 — static-analysis floor (D10.19). Level 0 is the honest greenfield
+# static-analysis floor (D10.19). Level 0 is the honest greenfield
 # default; ratchet up a notch at a time and record the next level's error count here.
 includes:
     - vendor/larastan/larastan/extension.neon

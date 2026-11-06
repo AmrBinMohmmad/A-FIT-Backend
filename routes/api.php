@@ -14,7 +14,7 @@ use App\Http\Controllers\WaterController;
 use App\Http\Controllers\WeightController;
 use Illuminate\Support\Facades\Route;
 
-// All routes are served under /api/v1 (bootstrap/app.php apiPrefix — Rakaya D10.1).
+// All routes are served under /api/v1 (bootstrap/app.php apiPrefix).
 
 Route::prefix('auth/otp')->group(function (): void {
     Route::post('request', [AuthController::class, 'requestCode'])->middleware('throttle:otp-request');

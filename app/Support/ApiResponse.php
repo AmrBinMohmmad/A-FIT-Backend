@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /*
- * Follows kit/plumbing/backend/app/Support/ApiResponse.php (Rakaya D1) verbatim.
+ * Follows kit/plumbing/backend/app/Support/ApiResponse.php verbatim.
  */
 
 namespace App\Support;

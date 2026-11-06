@@ -85,7 +85,7 @@ return [
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
     /*
-    | Locales SetLocaleFromAcceptLanguage may switch to (Rakaya D3). Keep in step with lang/.
+    | Locales SetLocaleFromAcceptLanguage may switch to. Keep in step with lang/.
     */
     'supported_locales' => ['ar', 'en'],
 

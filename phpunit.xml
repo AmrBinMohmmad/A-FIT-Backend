@@ -18,7 +18,7 @@
         </include>
     </source>
     <php>
-        <!-- Rakaya kit phpunit-env-snippet: hermetic suite regardless of the local .env. -->
+        <!-- phpunit env snippet: hermetic suite regardless of the local .env. -->
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

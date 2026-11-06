@@ -9,7 +9,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Composite home-screen payload built by App\Services\DailySummary. The array shape
- * is declared there; this resource is the single wire emitter for it (Rakaya D6).
+ * is declared there; this resource is the single wire emitter for it.
  */
 class DashboardResource extends JsonResource
 {
