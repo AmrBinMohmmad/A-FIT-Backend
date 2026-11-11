@@ -11,7 +11,8 @@ RUN apk add --no-cache icu-dev libzip-dev oniguruma-dev linux-headers $PHPIZE_DE
     && docker-php-ext-install -j"$(nproc)" pdo_mysql mbstring intl bcmath opcache pcntl zip \
     && pecl install redis \
     && docker-php-ext-enable redis \
-    && apk del $PHPIZE_DEPS
+    && apk del $PHPIZE_DEPS \
+    && supervisor
 
 # Opcache tuned for a read-mostly API: files are immutable inside the image.
 RUN { \
