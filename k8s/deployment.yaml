@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: deployment
+metadata:
+  name: afit-deployment
+  namespace: a-fit
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+    app: a-fit
+  template:
+    metadata:
+      labels:
+        app: a-fit
+    spec:
+    

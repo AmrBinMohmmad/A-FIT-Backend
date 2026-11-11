@@ -1,0 +1,3 @@
+$kind: collection
+description: "The grocery catalog: search by name/Arabic name/brand/barcode, kinds (variants) of a generic item, recent foods, and the caller's own label-typed foods."
+order: 4500

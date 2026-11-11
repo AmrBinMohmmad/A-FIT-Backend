@@ -11,7 +11,8 @@ RUN apk add --no-cache icu-dev libzip-dev oniguruma-dev linux-headers $PHPIZE_DE
     && docker-php-ext-install -j"$(nproc)" pdo_mysql mbstring intl bcmath opcache pcntl zip \
     && pecl install redis \
     && docker-php-ext-enable redis \
-    && apk del $PHPIZE_DEPS
+    && apk del $PHPIZE_DEPS \
+    && supervisor
 
 # Opcache tuned for a read-mostly API: files are immutable inside the image.
 RUN { \
@@ -32,6 +33,11 @@ WORKDIR /var/www
 COPY --from=vendor /app/vendor ./vendor
 COPY . .
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+COPY nginx.conf /etc/nginx/nginx.conf
+
+COPY supervisord.conf /etc/supervisord.conf
+
 RUN composer dump-autoload --optimize --classmap-authoritative --no-dev \
     && rm /usr/bin/composer \
     && chown -R www-data:www-data storage bootstrap/cache \

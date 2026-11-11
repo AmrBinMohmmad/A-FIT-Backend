@@ -1,19 +1,18 @@
-# backend quality gate (D10.21) + delivery.
+# Backend quality gate + delivery.
 #
 #   push/PR to dev, main ........ quality (EXACTLY the members of `composer check`)
-#   push to dev ................. image  amromohmmad/a_fit_backend:dev + :sha-<short>
-#   push to main ................ image  :latest + :sha-<short>
-#   tag vX.Y.Z .................. image  :X.Y.Z + :X.Y + :latest, and a GitHub release
+#   push to dev ................. docker build → tag :dev + :sha-<short> → push to Docker Hub
+#   push to main ................ automatic git tag (latest MAJOR.MINOR + 1, starting at 0.1),
+#                                 docker build → tag :<tag> + :latest + :sha-<short> → push,
+#                                 GitHub release
 #
 # Secrets required on the repository: DOCKERHUB_USERNAME, DOCKERHUB_TOKEN (a Docker Hub
-# access token with read/write on the amromohmmad namespace). Every build/deploy job
-# `needs: quality`; nothing ships from a red gate.
+# access token). Without them the image job skips. Every delivery job `needs: quality`.
 name: backend
 
 on:
   push:
     branches: [main, dev]
-    tags: ["v*.*.*"]
   pull_request:
     branches: [main, dev]
 
@@ -33,7 +32,11 @@ jobs:
       - id: secrets
         env:
           HAS_DOCKERHUB: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
-        run: echo "dockerhub=$HAS_DOCKERHUB" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "dockerhub=$HAS_DOCKERHUB" >> "$GITHUB_OUTPUT"
+          if [ "$HAS_DOCKERHUB" != "true" ]; then
+            echo "::warning title=No image will be pushed::Add the repository secrets DOCKERHUB_USERNAME and DOCKERHUB_TOKEN to build and push amromohmmad/a_fit_backend."
+          fi
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -58,59 +61,107 @@ jobs:
       - name: Tests incl. architecture gate (composer test)
         run: composer test
 
-  image:
+  tag:
     needs: quality
-    if: github.event_name == 'push' && needs.quality.outputs.dockerhub == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: docker/setup-buildx-action@v3
-
-      - uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.IMAGE }}
-          # dev → :dev · main → :latest · v1.2.3 → :1.2.3 :1.2 :latest · always :sha-<short>
-          tags: |
-            type=ref,event=branch,enable=${{ github.ref == 'refs/heads/dev' }}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=sha,prefix=sha-
-          labels: |
-            org.opencontainers.image.title=A-FIT API
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  release:
-    needs: image
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version, increment minor, and set tag name
+        id: version
+        run: |
+          latest_tag=$(git tag --list '[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)
+          if [ -z "$latest_tag" ]; then
+            # No tag found, start at 0.1
+            major=0
+            minor=1
+          else
+            # Get the major and minor versions
+            IFS='.' read -r major minor <<< "$latest_tag"
+            # Increment minor
+            minor=$((minor + 1))
+          fi
+          tag="$major.$minor"
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Next tag: $tag"
+
+      - name: Push the tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+  image:
+    needs: [quality, tag]
+    # dev: tag is skipped; main: tag must have succeeded. Either way the secrets must exist.
+    if: >-
+      always() && github.event_name == 'push'
+      && needs.quality.result == 'success' && needs.quality.outputs.dockerhub == 'true'
+      && (needs.tag.result == 'success' || needs.tag.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      # main → the automatic tag (e.g. 0.3); dev → "dev"
+      TAG: ${{ needs.tag.outputs.tag || 'dev' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build the image
+        run: docker build --pull -t "$IMAGE:$TAG" -t "$IMAGE:sha-${GITHUB_SHA::7}" .
+
+      - name: Tag latest (main only)
+        if: github.ref == 'refs/heads/main'
+        run: docker tag "$IMAGE:$TAG" "$IMAGE:latest"
+
+      - name: Push every tag of the image
+        run: docker push --all-tags "$IMAGE"
+
+      - name: Summary
+        run: |
+          {
+            echo "### Image pushed"
+            echo
+            echo "- \`$IMAGE:$TAG\`"
+            echo "- \`$IMAGE:sha-${GITHUB_SHA::7}\`"
+            [ "$GITHUB_REF" = "refs/heads/main" ] && echo "- \`$IMAGE:latest\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  release:
+    needs: [tag, image]
+    if: >-
+      always() && github.ref == 'refs/heads/main' && needs.tag.result == 'success'
+      && (needs.image.result == 'success' || needs.image.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ needs.tag.outputs.tag }}
+      IMAGE_BUILT: ${{ needs.image.result == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: GitHub release with generated notes
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" \
-            --title "API ${GITHUB_REF_NAME}" \
-            --generate-notes \
-            --notes "Image: \`${IMAGE}:${GITHUB_REF_NAME#v}\` (also \`:latest\`)."
+          if [ "$IMAGE_BUILT" = "true" ]; then
+            notes="Image: \`${IMAGE}:${TAG}\` (also \`:latest\`)."
+          else
+            notes="No image was pushed: configure DOCKERHUB_USERNAME and DOCKERHUB_TOKEN."
+          fi
+          gh release create "$TAG" --title "API $TAG" --generate-notes --notes "$notes"
