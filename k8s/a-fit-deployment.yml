@@ -4,7 +4,7 @@ metadata:
   name: a-fit-dep
   namespace: a-fit
   labels:
-    app:  a-fit-dep
+    app: a-fit-dep
 spec:
   replicas: 1
   selector:
@@ -18,30 +18,47 @@ spec:
       imagePullSecrets:
         - name: regcred
       initContainers:
-      - name: a-fit-migration
-        image: amromohmmad/a_fit_backend:latest
-        imagePullPolicy: Always
-        command: ["php","artisan","migrate","--force"]
-        envFrom:
-          - configMapRef:
-              name: a-fit-config
-          - secretRef:
-              name: a-fit-secret
-
-      containers:
-        - name: a-fit-app
+        - name: a-fit-migration
           image: amromohmmad/a_fit_backend:latest
           imagePullPolicy: Always
-          ports:
-            - containerPort: 80
-              name: http
+          command: ["php", "artisan", "migrate", "--force"]
           envFrom:
             - configMapRef:
                 name: a-fit-config
             - secretRef:
                 name: a-fit-secret
+      containers:
+        - name: nginx
+          image: amromohmmad/a_fit_backend:latest
+          imagePullPolicy: Always
+          command: ["nginx", "-g", "daemon off;"]
+          ports:
+            - containerPort: 80
+              name: http
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "16m"
+            limits:
+              memory: "128Mi"
+              cpu: "250m"
+
+        - name: php-fpm
+          image: amromohmmad/a_fit_backend:latest
+          imagePullPolicy: Always
+          command: ["php-fpm", "-F"]
+          envFrom:
+            - configMapRef:
+                name: a-fit-config
+            - secretRef:
+                name: a-fit-secret
+          ports:
+            - containerPort: 9000
+              name: php-fpm
           resources:
             requests:
               memory: "128Mi"
+              cpu: "64m"
             limits:
-              memory: "128Mi"
+              memory: "384Mi"
+              cpu: "500m"
