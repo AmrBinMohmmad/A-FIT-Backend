@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: a-fit-service
+  namespace: a-fit
+spec:
+  type: ClusterIP
+  selector:
+    app: a-fit-dep
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80

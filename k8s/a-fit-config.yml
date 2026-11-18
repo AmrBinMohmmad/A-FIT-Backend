@@ -6,7 +6,7 @@ metadata:
 data:
   APP_ENV: "local"
   APP_DEBUG: "true"
-  APP_URL: "http://a-fitness.duckdns.org"
+  APP_URL: "https://a-fitness.duckdns.org"
   LOG_CHANNEL: "stderr"
   DB_CONNECTION: "mysql"
   DB_HOST: "a-fit-mysql-service"
