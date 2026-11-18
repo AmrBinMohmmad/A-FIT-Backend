@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: a-fit-dep
+  namespace: a-fit
+  labels:
+    app:  a-fit-dep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: a-fit-dep
+  template:
+    metadata:
+      labels:
+        app: a-fit-dep
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      initContainers:
+      - name: a-fit-migration
+        image: amromohmmad/a_fit_backend:latest
+        imagePullPolicy: Always
+        command: ["php","artisan","migrate","--force"]
+        envFrom:
+          - configMapRef:
+              name: a-fit-config
+          - secretRef:
+              name: a-fit-secret
+
+      containers:
+        - name: a-fit-app
+          image: amromohmmad/a_fit_backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: http
+          envFrom:
+            - configMapRef:
+                name: a-fit-config
+            - secretRef:
+                name: a-fit-secret
+          resources:
+            requests:
+              memory: "128Mi"
+            limits:
+              memory: "128Mi"

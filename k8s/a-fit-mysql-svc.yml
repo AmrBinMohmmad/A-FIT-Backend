@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: a-fit-mysql-service
+  namespace: a-fit
+spec:
+  ports:
+    - port: 3306
+      name: mysql
+  selector:
+    app: a-fit-mysql
+  clusterIP: None
+

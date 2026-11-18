@@ -49,7 +49,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 RUN mkdir -p /var/log/supervisor /var/run/supervisor
 
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/http.d/default.conf
 COPY supervisord.conf /etc/supervisord.conf
 
 RUN composer dump-autoload --optimize --classmap-authoritative --no-dev \
