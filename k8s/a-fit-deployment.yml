@@ -4,7 +4,7 @@ metadata:
   name: a-fit-dep
   namespace: a-fit
   labels:
-   app: a-fit-dep
+    app: a-fit-dep
 spec:
   replicas: 1
   selector:
