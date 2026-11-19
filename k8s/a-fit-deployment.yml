@@ -15,12 +15,9 @@ spec:
       labels:
         app: a-fit-dep
     spec:
-      imagePullSecrets:
-        - name: regcred
       initContainers:
         - name: a-fit-migration
           image: amromohmmad/a_fit_backend:latest
-          imagePullPolicy: Always
           command: ["php", "artisan", "migrate", "--force"]
           envFrom:
             - configMapRef:
@@ -28,37 +25,19 @@ spec:
             - secretRef:
                 name: a-fit-secret
       containers:
-        - name: nginx
+        - name: app
           image: amromohmmad/a_fit_backend:latest
-          imagePullPolicy: Always
-          command: ["nginx", "-g", "daemon off;"]
           ports:
             - containerPort: 80
-              name: http
-          resources:
-            requests:
-              memory: "32Mi"
-              cpu: "16m"
-            limits:
-              memory: "128Mi"
-              cpu: "250m"
-
-        - name: php-fpm
-          image: amromohmmad/a_fit_backend:latest
-          imagePullPolicy: Always
-          command: ["php-fpm", "-F"]
           envFrom:
             - configMapRef:
                 name: a-fit-config
             - secretRef:
                 name: a-fit-secret
-          ports:
-            - containerPort: 9000
-              name: php-fpm
           resources:
             requests:
-              memory: "128Mi"
-              cpu: "64m"
+              memory: "256Mi"
+              cpu: "100m"
             limits:
-              memory: "384Mi"
+              memory: "640Mi"
               cpu: "500m"
