@@ -8,9 +8,9 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /** Production has no seed data; local fixtures are created through the API or tests. */
+    /** The food catalog is reference data and seeds everywhere (idempotent); nothing else does. */
     public function run(): void
     {
-        //
+        $this->call(FoodCatalogSeeder::class);
     }
 }

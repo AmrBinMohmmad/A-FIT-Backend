@@ -1,0 +1,10 @@
+$kind: http-request
+description: "One online product by barcode (for a scan the catalog does not know). result is null when unknown; available=false when the online catalog is down."
+url: '{{base_url}}/foods/lookup/6281000000011'
+method: GET
+order: 1600
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

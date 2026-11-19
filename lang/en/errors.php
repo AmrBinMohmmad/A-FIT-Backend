@@ -21,5 +21,7 @@ return [
     'already_member' => 'You are already a member of this group.',
     'owner_cannot_leave' => 'Transfer ownership or delete the group before leaving.',
     'challenge_window' => 'The challenge must end after it starts and start no earlier than today.',
+    'product_not_found' => 'No product with that barcode is known online. Add it from the label instead.',
+    'online_catalog_down' => 'The online product catalog is unavailable right now. Try again later or add the food from its label.',
     'steps_range' => 'Step history can cover at most 90 days.',
 ];

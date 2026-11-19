@@ -1,0 +1,10 @@
+$kind: http-request
+description: "Only the caller's own foods; catalog rows and other users' foods are 404."
+url: '{{base_url}}/foods/1'
+method: DELETE
+order: 5000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

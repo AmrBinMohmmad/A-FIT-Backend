@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FoodController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\MealController;
 use App\Http\Controllers\MeController;
@@ -32,6 +33,15 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function (): void {
     Route::get('meals', [MealController::class, 'index']);
     Route::get('meals/summary', [MealController::class, 'summary']);
     Route::get('meals/frequent', [MealController::class, 'frequent']);
+    Route::get('foods', [FoodController::class, 'index']);
+    Route::get('foods/recent', [FoodController::class, 'recent']);
+    // Online product lookups fan out to Open Food Facts (cached); tighter limiter than reads.
+    Route::middleware('throttle:lookup')->group(function (): void {
+        Route::get('foods/lookup', [FoodController::class, 'lookup']);
+        Route::get('foods/lookup/{barcode}', [FoodController::class, 'lookupBarcode']);
+        Route::post('foods/import', [FoodController::class, 'import']);
+    });
+    Route::get('foods/{food}', [FoodController::class, 'show']);
     Route::get('steps', [StepController::class, 'history']);
     Route::get('water/{date}', [WaterController::class, 'show']);
     Route::get('weights', [WeightController::class, 'history']);
@@ -53,6 +63,9 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function (): void {
         Route::post('meals', [MealController::class, 'store']);
         Route::put('meals/{meal}', [MealController::class, 'update']);
         Route::delete('meals/{meal}', [MealController::class, 'destroy']);
+
+        Route::post('foods', [FoodController::class, 'store']);
+        Route::delete('foods/{food}', [FoodController::class, 'destroy']);
 
         Route::put('water/{date}', [WaterController::class, 'update']);
         Route::post('weights', [WeightController::class, 'store']);

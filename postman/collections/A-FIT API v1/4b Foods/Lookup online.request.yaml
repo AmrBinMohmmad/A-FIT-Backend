@@ -1,0 +1,13 @@
+$kind: http-request
+description: "Online products (Open Food Facts) matching a name: name, brand, photo, per-100 g and per-serving nutrition; food_id set when already in the catalog. Cached a day per query; 20/min per user."
+url: '{{base_url}}/foods/lookup?q=milk'
+method: GET
+order: 1500
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+queryParams:
+  - key: q
+    value: milk

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: a-fit-config
+  namespace: a-fit
+data:
+  APP_ENV: "local"
+  APP_DEBUG: "true"
+  APP_URL: "https://a-fitness.duckdns.org"
+  LOG_CHANNEL: "stderr"
+  DB_CONNECTION: "mysql"
+  DB_HOST: "a-fit-mysql-service"
+  DB_PORT: "3306"
+  DB_DATABASE: "a-fit-db"
+  DB_USERNAME: "a-fit-user"

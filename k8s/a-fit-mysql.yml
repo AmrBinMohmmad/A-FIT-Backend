@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: a-fit-mysql
+  namespace: a-fit
+spec:
+  serviceName: "a-fit-mysql-svc"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: a-fit-mysql
+  template:
+    metadata:
+      labels:
+        app: a-fit-mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          envFrom:
+            - secretRef:
+                name: a-fit-secret
+          ports:
+          - containerPort: 3306
+            name: mysql
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: "100Mi"
+          limits:
+            memory: "100Mi"

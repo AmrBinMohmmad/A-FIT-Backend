@@ -1,0 +1,10 @@
+$kind: http-request
+description: "Foods the caller logged most recently (distinct, newest first, max 20)."
+url: '{{base_url}}/foods/recent'
+method: GET
+order: 2000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar

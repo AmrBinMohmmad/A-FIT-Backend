@@ -22,6 +22,7 @@ class MealResource extends JsonResource
             'fat' => $this->fat ?? 0,
             'meal_type' => $this->meal_type?->value ?? 'other',
             'eaten_on' => $this->eaten_on->toDateString(),
+            'items' => MealItemResource::collection($this->whenLoaded('items')),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

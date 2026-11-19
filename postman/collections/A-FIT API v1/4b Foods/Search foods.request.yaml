@@ -1,0 +1,15 @@
+$kind: http-request
+description: "q = name, Arabic name, brand, or an exact barcode (8–14 digits); category = one FoodCategory value; paginated."
+url: '{{base_url}}/foods?q=egg&per_page=20'
+method: GET
+order: 1000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+queryParams:
+  - key: q
+    value: egg
+  - key: per_page
+    value: '20'

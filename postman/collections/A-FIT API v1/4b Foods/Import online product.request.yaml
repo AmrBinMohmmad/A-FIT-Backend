@@ -1,0 +1,18 @@
+$kind: http-request
+description: "Files the online product in the shared catalog (idempotent on barcode; 201 first time, 200 after) and returns it as a Food."
+url: '{{base_url}}/foods/import'
+method: POST
+order: 1700
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "barcode": "6281000000011"
+    }

@@ -16,6 +16,8 @@ composer install
 cp .env.example .env && php artisan key:generate
 # local overrides: APP_ENV=local APP_DEBUG=true DB_CONNECTION=sqlite CACHE_STORE=file QUEUE_CONNECTION=sync MAIL_MAILER=log
 touch database/database.sqlite && php artisan migrate
+php artisan db:seed                 # the food catalog (idempotent; re-run after editing database/data/foods.json)
+php artisan foods:import-off        # optional: brand products sold in Saudi Arabia from Open Food Facts
 php artisan serve --host 0.0.0.0 --port 8000
 ```
 
@@ -25,12 +27,12 @@ testing you may set `DEV_MASTER_OTP=000000`: that code then signs in any e-mail,
 
 ## Branching
 
-- `main` — what is deployed. Only fast-forward merges from `dev` via a pull request; the
-  Docker image is built from `main` only (`.github/workflows/backend.yml`).
+- `main` — what is deployed. Changes only through a pull request from `dev`; every merge tags
+  and ships a release (`.github/workflows/backend.yml`).
 - `dev` — integration branch and the GitHub default. Feature branches (`feat/...`, `fix/...`)
   branch from `dev` and come back through a pull request; the quality gate must be green.
-- Nothing is pushed straight to `main`; `dev` accepts direct pushes only for small fixes
-  from the owner. Commits carry the author's own identity, no generated attribution.
+- Nothing is pushed straight to `main` or `dev`: every change is a branch and a pull request.
+  Commits carry the author's own identity, no generated attribution.
 
 ## Quality gate
 
@@ -51,17 +53,26 @@ and queue containers.
 
 ## Releases
 
-```bash
-git checkout main && git pull
-git tag v1.2.0 && git push origin v1.2.0
-```
+Releases are automatic. Every push to `main` (normally the merge of a `dev` pull request) runs the
+gate, then creates the next tag — `MAJOR.MINOR` with the minor incremented from the latest tag,
+starting at `0.1` — pushes the image `amromohmmad/a_fit_backend` to Docker Hub as `:<tag>`,
+`:latest` and `:sha-<short>`, and publishes a GitHub release with generated notes. Pushes to `dev`
+publish `:dev`. Bump the major by tagging it once by hand (`git tag 1.0 && git push origin 1.0`);
+the next merge continues from there.
 
-CI (`.github/workflows/backend.yml`) runs the quality gate on every push and pull request to
-`main` and `dev`, pushes the image `amromohmmad/a_fit_backend` to Docker Hub (`:dev` from `dev`,
-`:latest` from `main`, `:X.Y.Z` + `:X.Y` + `:latest` from a tag, always `:sha-<short>`), and a
-tag also publishes a GitHub release with generated notes. Repository secrets needed:
-`DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (a Docker Hub access token). Deploy by setting
-`DOCKER_IMAGE=amromohmmad/a_fit_backend:X.Y.Z` in the server's `.env` and `docker compose up -d`.
+Repository secrets needed: `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (a Docker Hub access
+token); until they exist the image step skips and the release says so. Deploy by setting
+`DOCKER_IMAGE=amromohmmad/a_fit_backend:<tag>` in the server's `.env` and `docker compose up -d`.
+
+## Food catalog
+
+`database/data/foods.json` is the curated generic catalog (per-100 g values from USDA FoodData
+Central reference entries, Arabic names, household servings); `FoodCatalogSeeder` upserts it by
+`catalog_key`, so it runs on every deploy. Kinds of an item (egg sizes, toast types) point at
+their generic row through `generic_id`. Brand products are never typed in by hand: run
+`php artisan foods:import-off` to pull products sold in a country from Open Food Facts (ODbL;
+the app credits it) as variants, or let users add a food from the package label (private to
+them). Meals log portions of these foods; totals are computed server-side and snapshotted.
 
 ## Postman
 

@@ -1,0 +1,10 @@
+$kind: http-request
+description: "One food plus the kinds/brands under it that the caller may see."
+url: '{{base_url}}/foods/1'
+method: GET
+order: 3000
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
