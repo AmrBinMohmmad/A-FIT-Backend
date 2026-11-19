@@ -21,15 +21,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Auto Tag (Minor)
+      - name: Auto Tag (Major)
         id: tag
         if: github.event_name == 'push'
         run: |
+          git fetch --tags
           LATEST=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
           LATEST=${LATEST:-v0.0.0}
           MAJOR=$(echo $LATEST | cut -d. -f1 | tr -d v)
-          MINOR=$(echo $LATEST | cut -d. -f2)
-          NEW_TAG="v$MAJOR.$((MINOR + 1)).0"
+          NEW_TAG="v$((MAJOR + 1)).0.0"
           git config user.email "github-actions@github.com"
           git config user.name "GitHub Actions"
           git tag $NEW_TAG
