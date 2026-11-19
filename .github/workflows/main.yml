@@ -1,57 +1,35 @@
-name: Backend CI/CD - Main Release
+name: Production CD (main)
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+    paths-ignore:
+      - 'k8s/**'
+      - '**.md'
+
+permissions:
+  contents: write
 
 jobs:
-  test:
+  build-and-deploy:
+    name: Build Image & Update Prod Manifest
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          extensions: mbstring, dom, fileinfo, mysql, gd, pdo_sqlite, sqlite3, bcmath, intl, zip
-          coverage: none
-
-      - name: Install Dependencies
-        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-
-      - name: Prepare Environment
-        run: |
-          cp .env.example .env
-          php artisan key:generate
-
-      - name: Run Pest/PHPUnit Tests
-        run: php artisan test
-
-  tag:
-    needs: test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    outputs:
-      version: ${{ steps.tag.outputs.version }}
-      tag: ${{ steps.tag.outputs.tag }}
-
-    steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Auto Tag (Production)
+      - name: Auto Tag (Minor)
         id: tag
+        if: github.event_name == 'push'
         run: |
-          LATEST=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || echo "v0.0.0")
+          LATEST=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
+          LATEST=${LATEST:-v0.0.0}
           MAJOR=$(echo $LATEST | cut -d. -f1 | tr -d v)
           MINOR=$(echo $LATEST | cut -d. -f2)
-          PATCH=$(echo $LATEST | cut -d. -f3)
-          NEW_TAG="v$MAJOR.$MINOR.$((PATCH + 1))"
+          NEW_TAG="v$MAJOR.$((MINOR + 1)).0"
           git config user.email "github-actions@github.com"
           git config user.name "GitHub Actions"
           git tag $NEW_TAG
@@ -59,48 +37,32 @@ jobs:
           echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
           echo "version=${NEW_TAG#v}" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
         with:
-          tag_name: ${{ steps.tag.outputs.tag }}
-          name: Release ${{ steps.tag.outputs.tag }}
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  deploy:
-    needs: tag
-    runs-on: ubuntu-latest
-    steps:
-      - name: Execute Remote SSH Commands
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
         with:
-          host: ${{ secrets.SERVER_HOST_PROD || secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER_PROD || secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -e
+          context: .
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            amromohmmad/a_fit_backend:${{ steps.tag.outputs.tag || 'pr-check' }}
+            amromohmmad/a_fit_backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-            cd /var/www/sanad-backend || cd /var/www/sanad-backend-prod || { echo "Couldn't find project directory"; exit 1; }
-
-            PREVIOUS_COMMIT=$(git rev-parse HEAD)
-            git pull origin main || { echo "git pull failed"; exit 1; }
-
-            composer install --no-dev --optimize-autoloader || {
-              echo "composer install failed. Rolling back..."
-              git reset --hard $PREVIOUS_COMMIT
-              exit 1
-            }
-
-            php artisan migrate --force || {
-              echo "Migration failed. Rolling back..."
-              php artisan migrate:rollback
-              exit 1
-            }
-
-            php artisan optimize:clear
-            php artisan config:cache
-            php artisan route:cache
-            sudo systemctl restart php8.4-fpm
-            echo "Deployment successful"
-
+      - name: Update image tag in k8s/a-fit-deployment.yml
+        if: github.event_name == 'push'
+        run: |
+          sed -i "s|image: amromohmmad/a_fit_backend:.*|image: amromohmmad/a_fit_backend:${{ steps.tag.outputs.tag }}|g" k8s/a-fit-deployment.yml
+          git add k8s/a-fit-deployment.yml
+          git diff --staged --quiet || git commit -m "chore(release): deploy ${{ steps.tag.outputs.tag }} [skip ci]"
+          git pull --rebase origin main
+          git push origin main
