@@ -2,15 +2,16 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: a-fit-dep
+  namespace: a-fit
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: a-fit
+      app: a-fit-dep
   template:
     metadata:
       labels:
-        app: a-fit
+        app: a-fit-dep
     spec:
       initContainers:
         - name: a-fit-migration
