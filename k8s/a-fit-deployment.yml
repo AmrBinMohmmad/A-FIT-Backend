@@ -19,7 +19,7 @@ spec:
         - name: regcred
       initContainers:
         - name: a-fit-migration
-          image: amromohmmad/a_fit_backend:latest
+          image: amromohmmad/a_fit_backend:v1.0.0
           command: ["php", "artisan", "migrate", "--force"]
           envFrom:
             - configMapRef:
@@ -28,7 +28,7 @@ spec:
                 name: a-fit-secret
       containers:
         - name: app
-          image: amromohmmad/a_fit_backend:latest
+          image: amromohmmad/a_fit_backend:v1.0.0
           ports:
             - containerPort: 80
           envFrom:
